@@ -12,6 +12,11 @@
   h1 { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 600; margin: 0; color: #f0d6d6; letter-spacing: 1px; }
   .logo { width: 34px; height: 34px; border-radius: 9px; background: #e5383b; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800; }
   #status { font-size: 13px; color: #b09a9a; }
+  .profile-status { text-align:center; margin:2px 0 0; padding:3px 10px; }
+  #profileSummary { text-align:center; width:100%; max-width:340px; padding:4px 0; }
+  #profileName { font-size:14px; color:#f0d6d6; }
+  #actionDetails { width:100%; max-width:340px; box-sizing:border-box; }
+  #actionDetails summary { cursor:pointer; }
   #timer { font-size: 28px; font-variant-numeric: tabular-nums; letter-spacing: 1px; min-height: 34px; }
   .top { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; max-width: 340px; box-sizing: border-box; background: #261e1e; border-radius: 14px; padding: 10px 16px; }
   .row2 { display: flex; gap: 8px; }
@@ -20,10 +25,12 @@
   body > * { order: 5; }
   body > h1 { order: 0; }
   body > .top { order: 1; }
-  body > #decoBtn { order: 2; }
-  body > #deco { order: 3; }
-  body > #rooms { order: 4; }
-  body > div:has(#seats) { order: 5; width: 100%; max-width: 720px; }
+  body > #profileSummary { order: 2; }
+  body > #actionDetails { order: 3; }
+  body > #decoBtn { order: 4; }
+  body > #deco { order: 5; }
+  body > #rooms { order: 6; }
+  body > div:has(#seats) { order: 7; width: 100%; max-width: 720px; }
   body > #note { order: 9; }
   button { font-size: 15px; padding: 12px 24px; border: 0; border-radius: 999px; background: #e5383b; color: #fff; font-weight: 600; cursor: pointer; }
   button.out { background: #3d2f2f; color: #eee; }
@@ -130,11 +137,12 @@
 </head>
 <body>
   <h1><span class="logo">출</span>출그닝 · 온라인 사무실</h1>
-  <div class="top"><div class="tt"><div id="status">아직 출근 전이에요</div>
-  <div id="timer">00:00:00</div></div>
+  <div class="top"><div class="tt"><div id="timer">00:00:00</div></div>
   <button id="btn">출근하기</button></div>
-  <div class="chips" id="rooms"></div>
+  <div id="profileSummary"><strong id="profileName">내 이름</strong><div id="status" class="profile-status">아직 출근 전이에요</div></div>
+  <details id="actionDetails" class="deco-group"><summary>🙌 캐릭터 행동</summary><div id="actionMenu" class="action-menu"></div></details>
   <button class="chip" id="decoBtn">꾸미기 ▾</button>
+  <div class="chips" id="rooms"></div>
   <div id="deco" hidden>
   <details class="deco-group"><summary>👤 내 이름</summary><div class="row2"><input id="nick" maxlength="6" placeholder="이름 (선택)"></div>
   </details><details class="deco-group"><summary>내 상태 · 글자로 선택</summary><input id="stext" maxlength="8" placeholder="내 상태 직접 쓰기 (선택)" style="width:240px">
@@ -148,7 +156,6 @@
     <div class="office-head">🏢 회사 사무실 · 복도와 파티션 · 12석</div>
     <div id="count" style="text-align:center;margin-bottom:14px;font-size:15px;"></div>
     <div class="seats cols3" id="seats"></div>
-    <div id="actionMenu" class="action-menu" hidden></div>
   </div>
   <section id="stickers" style="width:100%;max-width:720px;box-sizing:border-box;background:#261e1e;border:1px solid #493737;border-radius:16px;padding:14px;order:7;text-align:center">
     <strong>💌 오늘의 스티커</strong><div style="font-size:12px;color:#bca8a8;margin:7px">출근해서 스티커를 남겨봐! 내 스티커는 다른 접속자에게도 보여.</div>
@@ -248,7 +255,7 @@
   };
   var chipsEl = document.getElementById('chips'), itemsEl = document.getElementById('items'), monsEl = document.getElementById('mons');
   var MONS = { red: '#e5383b', orange: '#f4845f', yellow: '#f2c14e', green: '#52b788', blue: '#4a90d9', purple: '#9b72cf', pink: '#ee7fb0', white: '#e8e8e8' };
-  var ITEMS = { cup: '☕', plant: '🪴', book: '📚', donut: '🍩', apple: '🍎', tea: '🍵', juice: '🥤', cactus: '🌵', lamp: '💡', phone: '📱', headset: '🎧', pen: '🖊️', clock: '⏰', cookie: '🍪', trophy: '🏆', flower: '🌷' };
+  var ITEMS = { plant: '🪴', book: '📚', donut: '🍩', apple: '🍎', tea: '🍵', juice: '🥤', cactus: '🌵', lamp: '💡', phone: '📱', headset: '🎧', pen: '🖊️', clock: '⏰', cookie: '🍪', trophy: '🏆', flower: '🌷' };
   try { var sv = JSON.parse(localStorage.getItem('props') || '{}'); if (typeof sv.mon === 'string' && Object.prototype.hasOwnProperty.call(MONS, sv.mon)) mon = sv.mon; if (Array.isArray(sv.items)) items = sv.items.filter(function (k) { return Object.prototype.hasOwnProperty.call(ITEMS, k); }).slice(0, 4); } catch (e) {}
 
   try { var s = localStorage.getItem('checkin'); if (s) start = parseInt(s, 10); } catch (e) {}
@@ -291,9 +298,9 @@
   }
   // NPC는 0~2명. 캐릭터마다 개성, 색상, 소품 수, 상태가 모두 다르다.
   var NPCS = [
-    {name:'월급루팡',title:'잠복근무',status:'zone',mon:'purple',items:['donut','phone','cup','cookie'],stx:'일하는 척',emoji:'🦥'},
+    {name:'월급루팡',title:'잠복근무',status:'zone',mon:'purple',items:['donut','phone','cookie'],stx:'일하는 척',emoji:'🦥'},
     {name:'퇴근요정',title:'칼퇴전문',status:'leave',mon:'pink',items:['clock','flower'],stx:'5분 남음',emoji:'🧚'},
-    {name:'커피수혈',title:'카페인팀',status:'coffee',mon:'orange',items:['cup','tea','juice','donut'],stx:'4샷 추가',emoji:'🧛'},
+    {name:'커피수혈',title:'카페인팀',status:'coffee',mon:'orange',items:['tea','juice','donut'],stx:'4샷 추가',emoji:'🧛'},
     {name:'회의지박령',title:'회의실장',status:'meet',mon:'blue',items:['book','pen','clock'],stx:'또 회의?',emoji:'👻'},
     {name:'키보드냥',title:'냥대리',status:'focus',mon:'green',items:['plant','headset'],stx:'냐옹',emoji:'🐈'},
     {name:'야근도깨비',title:'불야근팀',status:'overtime',mon:'red',items:['lamp','cookie','trophy','phone'],stx:'집이 어디',emoji:'👹'},
@@ -312,6 +319,8 @@
   function positionAt(i){return ROOM_POSITIONS[((roomNo||1)-1)%ROOM_POSITIONS.length][i];}
   function bossRoom(){return !roomNo||roomNo===1;}
   var BOSS = {name:'사장님',title:'대표이사',status:'work',mon:'yellow',items:['trophy','phone','clock','lamp'],stx:'',emoji:'😎'};
+  // Remove previously saved coffee-cup desk decoration as well.
+  items = items.filter(function(k){ return k !== 'cup'; });
   var MOTIONS = {work:{name:'열일',emoji:'👩‍💻'},cheer:{name:'만세',emoji:'🙌'},sleep:{name:'졸기',emoji:'😴'},coffee:{name:'커피',emoji:'☕'},dance:{name:'춤추기',emoji:'🕺'},panic:{name:'멘붕',emoji:'😵'}};
   var motion=localStorage.getItem('myMotion')||'work';if(!MOTIONS[motion])motion='work';
   var motionAt=Number(localStorage.getItem('motionAt')||0);
@@ -391,7 +400,7 @@
       seatsEl.appendChild(node);
     });
     countEl.textContent='실제 출근 '+occupied+'명 · '+(floor?floor+'층 '+roomNo+'호실 · ':'')+'빈 책상 터치해서 착석';
-    document.getElementById('actionMenu').hidden=!start;
+    document.getElementById('actionDetails').style.display=start?'':'none';
     drawStickerWall();
   }
   var actionMenu=document.getElementById('actionMenu');
@@ -453,6 +462,7 @@
   }
   function render() {
     drawChips();
+    document.getElementById('profileName').textContent = nick || '내 이름 미설정';
     if (start) {
       statusEl.textContent = (STAT[status] ? STAT[status].t : '근무 중') + (stx ? ' · ' + stx : '');
       btn.textContent = '퇴근하기'; btn.className = 'out';
