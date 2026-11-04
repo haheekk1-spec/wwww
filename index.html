@@ -26,7 +26,19 @@
   button { font-size: 15px; padding: 12px 24px; border: 0; border-radius: 999px; background: #e5383b; color: #fff; font-weight: 600; cursor: pointer; }
   button.out { background: #3d2f2f; color: #eee; }
   input { font-size: 14px; padding: 8px 14px; border-radius: 999px; border: 1px solid #4a3a3a; background: #2a2121; color: #eee; width: 120px; text-align: center; }
-  .seats { display: grid; grid-template-columns: repeat(auto-fill, 112px); gap: 10px; justify-content: center; }
+  .seats { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 9px; justify-items:center; max-width:560px; margin:auto; }
+  .seats.cols3 { grid-template-columns: repeat(3,minmax(0,1fr)); max-width:430px; }
+  .seats .cell { width:100%; max-width:120px; min-width:0; }
+  .seats .seat { width:100%; }
+  .seat.empty { opacity:.58; border-style:dashed; cursor:pointer; }
+  .seat.empty .mon { background:#201818; box-shadow:none; }
+  .seat.empty .lbl { background:#403535; color:#bbaaaa; }
+  .seat.npc { border-color:#71526b; }
+  .seat.npc .lbl { background:#795c78; color:white; border-bottom-color:#4f364e; }
+  .seat.npc .mon { border-radius:6px; }
+  .seat:focus-visible { outline:2px solid #fff; }
+  @media(max-width:410px){ .seats {gap:5px;} .seat .lbl{left:3px;right:3px;font-size:11px;} .seat .shelf{font-size:17px;} }
+
   .seat { zoom: 1; position: relative; width: 96px; height: 120px; box-sizing: border-box; background: #261e1e; border: 3px solid #4a3a3a; border-bottom: 0; border-radius: 8px 8px 0 0; color: #7d6d6d; font-size: 13px; text-align: center; }
   .seat::after { content: ""; position: absolute; left: -3px; right: -3px; bottom: 0; height: 16px; background: #5a4343; border-radius: 3px 3px 0 0; }
   .seat .lbl { position: absolute; top: 6px; left: 10px; right: 10px; height: 20px; line-height: 20px; box-sizing: border-box; background: #6b604a; color: #cfc3a3; border-bottom: 3px solid #4d4434; border-radius: 3px; font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -74,20 +86,18 @@
   <div class="chips" id="mons"></div>
   </div>
   <div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px"><span style="font-size:12px;color:#cdbaba">한 줄 자리</span><button class="chip sel" id="cols3" style="padding:6px 12px">3자리</button><button class="chip" id="cols4" style="padding:6px 12px">4자리</button></div>
     <div id="count" style="text-align:center;margin-bottom:14px;font-size:15px;"></div>
     <div class="seats" id="seats"></div>
   </div>
-  <section id="guestbook" style="width:100%;max-width:720px;box-sizing:border-box;background:#261e1e;border:1px solid #493737;border-radius:16px;padding:15px;order:7">
-    <button id="guestToggle" class="chip" style="width:100%">📒 공용 방명록 열기 ▾</button>
-    <div id="guestPanel" hidden style="margin-top:12px">
-      <div id="guestMessages" style="max-height:310px;overflow-y:auto;display:flex;flex-direction:column;gap:9px;margin-bottom:12px;font-size:13px">불러오는 중...</div>
-      <div style="display:flex;gap:7px;flex-wrap:wrap"><input id="guestName" maxlength="12" placeholder="닉네임" style="flex:1;min-width:90px"><input id="guestText" maxlength="160" placeholder="한마디 남기기 (160자)" style="flex:3;min-width:160px;text-align:left"></div>
-      <button id="guestSend" style="margin-top:9px;width:100%">글 남기기</button>
-      <small id="guestInfo" style="display:block;margin-top:7px">실제 이용자만 작성할 수 있어요.</small>
-    </div>
+  <section id="stickers" style="width:100%;max-width:720px;box-sizing:border-box;background:#261e1e;border:1px solid #493737;border-radius:16px;padding:14px;order:7;text-align:center">
+    <strong>💌 오늘의 스티커</strong><div style="font-size:12px;color:#bca8a8;margin:7px">출근해서 스티커를 남겨봐! 내 스티커는 다른 접속자에게도 보여.</div>
+    <div id="stickerButtons" class="chips" style="max-width:none"></div>
+    <div id="stickerWall" style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:12px"></div>
+    <small id="stickerInfo"></small>
   </section>
   <small id="note">말없이 같이 일하는 공간이에요.</small>
-  <small style="font-size:10px;opacity:.55">출그닝 v5 · 방명록 · 사무실 연출</small>
+  <small style="font-size:10px;opacity:.55">출그닝 v6 · 자리 선택 · 스티커</small>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
@@ -218,31 +228,97 @@
     w.appendChild(cap2);
     return w;
   }
-  // 방마다 동일하게 보이는 연출용 직원. 실제 출근 인원과 별도 표시.
-  var DEMO_NAMES = ['김대리','박주임','이과장','최사원','정대리','오팀장','한주임','윤사원','서대리','임과장','조사원','문대리','강주임','신대리','유사원','배과장','남주임','차대리','송사원','권대리'];
-  var DEMO_STATES = ['work','focus','coffee','meet','lunch','away','sleepy','hungry','overtime','happy'];
-  var demoCount = 5 + Math.floor(Math.random() * 16);
-  var demoStaff = Array.from({length:demoCount}, function(_,i) {return {name:DEMO_NAMES[i],status:DEMO_STATES[Math.floor(Math.random()*DEMO_STATES.length)],mon:Object.keys(MONS)[i%8],items:[Object.keys(ITEMS)[i%16]]};});
-  function rotateDemo() { demoStaff.forEach(function(p){if(Math.random()<0.22)p.status=DEMO_STATES[Math.floor(Math.random()*DEMO_STATES.length)];}); drawSeats(); }
-  setInterval(rotateDemo, 90000);
-  function drawSeats() {
-    seatsEl.textContent = '';
-    var n = start ? 1 : 0;
-    peers.forEach(function (p) {
-      if (p.isMe) return;
-      var pr = p.presence || {};
-      if (pr.state !== 'in') return;
-      n++;
-      var nm = (typeof pr.nick === 'string' && pr.nick) ? pr.nick.slice(0, 6) : '·';
-      seatsEl.appendChild(seat(nm, 'on', pr.status, pr.items, pr.title, pr.mon, pr.stx));
-    });
-    demoStaff.forEach(function(p) { seatsEl.appendChild(seat(p.name, 'on', p.status, p.items, '직원', p.mon, '')); });
-    if (start) seatsEl.appendChild(seat(nick || '나', 'me', status, items, title, mon, stx));
-    countEl.textContent = '실제 출근 ' + n + '명 · 사무실 연출 ' + demoStaff.length + '명';
+  // NPC는 0~2명. 캐릭터마다 개성, 색상, 소품 수, 상태가 모두 다르다.
+  var NPCS = [
+    {name:'월급루팡',title:'잠복근무',status:'zone',mon:'purple',items:['donut','phone','cup','cookie'],stx:'일하는 척',emoji:'🦥'},
+    {name:'퇴근요정',title:'칼퇴전문',status:'leave',mon:'pink',items:['clock','flower'],stx:'5분 남음',emoji:'🧚'},
+    {name:'커피수혈',title:'카페인팀',status:'coffee',mon:'orange',items:['cup','tea','juice','donut'],stx:'4샷 추가',emoji:'🧛'},
+    {name:'회의지박령',title:'회의실장',status:'meet',mon:'blue',items:['book','pen','clock'],stx:'또 회의?',emoji:'👻'},
+    {name:'키보드냥',title:'냥대리',status:'focus',mon:'green',items:['plant','headset'],stx:'냐옹',emoji:'🐈'},
+    {name:'야근도깨비',title:'불야근팀',status:'overtime',mon:'red',items:['lamp','cookie','trophy','phone'],stx:'집이 어디',emoji:'👹'},
+    {name:'식곤증왕',title:'낮잠연구',status:'sleepy',mon:'yellow',items:['apple'],stx:'눈 감김',emoji:'🐻'},
+    {name:'선인장씨',title:'무언팀',status:'work',mon:'white',items:['cactus','plant','flower'],stx:'물 주세요',emoji:'🌵'}
+  ];
+  var seatNo = Number(localStorage.getItem('seatNo') || 1);
+  if (!Number.isInteger(seatNo) || seatNo<1 || seatNo>12) seatNo=1;
+  var cols = Number(localStorage.getItem('seatCols') || 3)===4?4:3;
+  var mySticker = localStorage.getItem('mySticker') || '';
+  var npcSeed = (floor||1)*97+(roomNo||1)*31;
+  function npcRand(n){ var x=Math.sin(n*127.1+npcSeed*13.7)*43758.5453;return x-Math.floor(x); }
+  function getNpcs(){
+    var count=Math.floor(npcRand(5)*3), result=[];
+    for(var i=0;i<count;i++){
+      var ix=Math.floor(npcRand(i+12)*NPCS.length),p=NPCS[ix];
+      if(result.some(function(x){return x.name===p.name;})) continue;
+      result.push(p);
+    }
+    return result;
   }
+  function drawSeats() {
+    seatsEl.textContent=''; seatsEl.className='seats'+(cols===3?' cols3':'');
+    document.getElementById('cols3').className='chip'+(cols===3?' sel':'');
+    document.getElementById('cols4').className='chip'+(cols===4?' sel':'');
+    var slots=Array(12).fill(null), occupied=0;
+    var active=peers.filter(function(p){return !p.isMe && p.presence && p.presence.state==='in';});
+    // 선착순 자리 배치: 같은 번호 충돌 시 다음 빈 자리로 배정.
+    active.sort(function(a,b){return String(a.peer).localeCompare(String(b.peer));});
+    active.forEach(function(p){
+      var pr=p.presence, desired=Number(pr.seatNo)-1;
+      if(!Number.isInteger(desired)||desired<0||desired>=12)desired=0;
+      while(slots[desired]) desired=(desired+1)%12;
+      slots[desired]={kind:'real',pr:pr};occupied++;
+    });
+    if(start){
+      var mine=seatNo-1;
+      while(slots[mine])mine=(mine+1)%12;
+      slots[mine]={kind:'me'};occupied++;
+    }
+    var npcList=getNpcs();
+    npcList.forEach(function(p,i){
+      var pos=Math.floor(npcRand(i+30)*12);
+      for(var j=0;j<12 && slots[pos];j++)pos=(pos+1)%12;
+      if(!slots[pos])slots[pos]={kind:'npc',pr:p};
+    });
+    slots.forEach(function(slot,i){
+      var node;
+      if(!slot){
+        node=seat('빈 자리','','',[],'',null,'');
+        var d=node.querySelector('.seat');d.classList.add('empty');d.setAttribute('role','button');d.tabIndex=0;
+        node.querySelector('.cap').textContent=(i+1)+'번 · 앉기';
+        var select=function(){seatNo=i+1;localStorage.setItem('seatNo',String(seatNo));if(!start){start=Date.now();localStorage.setItem('checkin',String(start));}render();sync();};
+        d.onclick=select;d.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();select();}};
+      }else if(slot.kind==='me'){
+        node=seat(nick||'나','me',status,items,title,mon,stx);
+        node.querySelector('.cap2').textContent=(stx?stx+' · ':'')+(i+1)+'번 자리';
+      }else if(slot.kind==='real'){
+        var pr=slot.pr;
+        node=seat((pr.nick||'동료').slice(0,6),'on',pr.status,pr.items,pr.title,pr.mon,pr.stx);
+      }else{
+        var p=slot.pr;
+        node=seat(p.name,'on npc',p.status,p.items,p.title,p.mon,p.stx);
+        node.querySelector('.mon').textContent=p.emoji;
+        node.querySelector('.cap2').textContent=p.stx;
+      }
+      seatsEl.appendChild(node);
+    });
+    countEl.textContent='실제 출근 '+occupied+'명 · '+(floor?floor+'층 '+roomNo+'호실 · ':'')+'빈 책상을 눌러 자리 선택';
+    drawStickerWall();
+  }
+  document.getElementById('cols3').onclick=function(){cols=3;localStorage.setItem('seatCols','3');drawSeats();};
+  document.getElementById('cols4').onclick=function(){cols=4;localStorage.setItem('seatCols','4');drawSeats();};
+  function drawStickerWall(){
+    var wall=document.getElementById('stickerWall');wall.textContent='';
+    var all=[];
+    if(start&&mySticker)all.push({name:nick||'나',sticker:mySticker});
+    peers.forEach(function(p){if(p.isMe||!p.presence||p.presence.state!=='in')return;
+      if(['👍','❤️','🔥','☕','🎉','😭','💪','🍀'].indexOf(p.presence.sticker)>=0)all.push({name:p.presence.nick||'동료',sticker:p.presence.sticker});});
+    if(!all.length){wall.textContent='아직 남긴 스티커가 없어';wall.style.color='#998888';return;}
+    all.forEach(function(p){var d=document.createElement('span');d.style.cssText='background:#392d2d;padding:8px 12px;border-radius:12px;font-size:14px';d.textContent=p.sticker+' '+String(p.name).slice(0,6);wall.appendChild(d);});
+  }
+  ['👍','❤️','🔥','☕','🎉','😭','💪','🍀'].forEach(function(st){var b=document.createElement('button');b.className='chip';b.textContent=st;b.onclick=function(){if(!start){document.getElementById('stickerInfo').textContent='출근한 다음 남길 수 있어!';return;}mySticker=st;localStorage.setItem('mySticker',st);sync();drawStickerWall();document.getElementById('stickerInfo').textContent='스티커를 남겼어!';};document.getElementById('stickerButtons').appendChild(b);});
   function sync() {
     try { localStorage.setItem('props', JSON.stringify({ items: items, mon: mon })); localStorage.setItem('workStatus', status); localStorage.setItem('statusText', stx); } catch (e) {}
-    if (room) room.presence({ state: start ? 'in' : 'out', nick: nick, status: status, items: items, title: title, mon: mon, stx: stx });
+    if (room) room.presence({ state: start ? 'in' : 'out', nick: nick, status: status, items: items, title: title, mon: mon, stx: stx, seatNo: seatNo, sticker: mySticker });
   }
   function drawChips() {
     chipsEl.textContent = '';
@@ -305,9 +381,9 @@
     try { localStorage.setItem('nick', nick); } catch (e) {}
     render(); sync();
   });
-  render();
+  // 초기 화면은 모든 설정값을 읽은 뒤 렌더링한다.
 
-  var MAXROOM = 50, ROOMS = 5, MAXFLOOR = 20;
+  var MAXROOM = 12, ROOMS = 5, MAXFLOOR = 20;
   var floor = 0, roomNo = 0, lobbyRef = null, busy = false;
   var roomsEl = document.getElementById('rooms');
   var stxEl = document.getElementById('stext');
@@ -377,63 +453,7 @@
       setTimeout(function () { noteEl.textContent = noteText(); }, 2500);
     });
   }
-  // Firebase 공용 방명록: rooms/guestbook/{auth.uid}/messages/{messageId}
-  // 기존 데이터베이스 규칙(auth.uid == $user)을 그대로 활용한다.
-  var guestPanel = document.getElementById('guestPanel');
-  var guestMessages = document.getElementById('guestMessages');
-  var guestName = document.getElementById('guestName');
-  var guestText = document.getElementById('guestText');
-  var guestInfo = document.getElementById('guestInfo');
-  var guestRef = null, guestUid = null, guestLastSend = 0;
-  guestName.value = nick || '';
-  document.getElementById('guestToggle').onclick = function() {
-    guestPanel.hidden = !guestPanel.hidden;
-    this.textContent = guestPanel.hidden ? '📒 공용 방명록 열기 ▾' : '📒 공용 방명록 닫기 ▴';
-  };
-  function displayGuestbook(data) {
-    var all = [];
-    Object.keys(data || {}).forEach(function(uid) {
-      var msgs = data[uid] && data[uid].messages || {};
-      Object.keys(msgs).forEach(function(id) {
-        var m = msgs[id];
-        if (m && typeof m.text === 'string' && typeof m.time === 'number') all.push({uid:uid,id:id,name:m.name,text:m.text,time:m.time});
-      });
-    });
-    all.sort(function(a,b){return b.time-a.time;});
-    guestMessages.textContent = '';
-    if (!all.length) {guestMessages.textContent='첫 방명록을 남겨줘!';return;}
-    all.slice(0,60).forEach(function(m) {
-      var wrap=document.createElement('div'); wrap.style.cssText='background:#332828;border-radius:10px;padding:10px;overflow-wrap:anywhere';
-      var head=document.createElement('div');head.style.cssText='color:#efc5c5;font-size:12px;margin-bottom:5px';
-      head.textContent=(typeof m.name==='string'?m.name.slice(0,12):'익명')+' · '+new Date(m.time).toLocaleString('ko-KR');
-      wrap.appendChild(head);
-      var body=document.createElement('div');body.textContent=m.text.slice(0,160);wrap.appendChild(body);
-      if (m.uid===guestUid) {
-        var del=document.createElement('button');del.textContent='삭제';del.className='chip';del.style.cssText='padding:4px 10px;font-size:11px;margin-top:7px';
-        del.onclick=function(){if(confirm('이 글을 삭제할까?'))guestRef.child(m.uid+'/messages/'+m.id).remove().catch(function(){guestInfo.textContent='삭제에 실패했어.';});};wrap.appendChild(del);
-      }
-      guestMessages.appendChild(wrap);
-    });
-  }
-  if (window.firebase) {
-    firebase.auth().onAuthStateChanged(function(user) {
-      if (!user || guestRef) return;
-      guestUid=user.uid;
-      guestRef=firebase.database().ref('rooms/guestbook');
-      guestRef.on('value',function(snap){displayGuestbook(snap.val());},function(){guestMessages.textContent='방명록 읽기 권한을 확인해 줘.';});
-    });
-  }
-  document.getElementById('guestSend').onclick=function(){
-    var name=guestName.value.trim().slice(0,12)||'익명';
-    var message=guestText.value.trim().slice(0,160);
-    if(!message){guestInfo.textContent='글을 입력해 줘.';return;}
-    if(!guestRef||!guestUid){guestInfo.textContent='연결 중이야. 잠시 후 다시 시도해 줘.';return;}
-    if(Date.now()-guestLastSend<15000){guestInfo.textContent='15초 뒤에 다시 작성할 수 있어.';return;}
-    guestLastSend=Date.now();
-    guestRef.child(guestUid+'/messages').push({name:name,text:message,time:firebase.database.ServerValue.TIMESTAMP})
-      .then(function(){guestText.value='';guestInfo.textContent='등록했어!';})
-      .catch(function(){guestInfo.textContent='등록 실패. Firebase 규칙을 확인해 줘.';guestLastSend=0;});
-  };
+  render();
   if (window.claude && window.claude.use) {
     window.claude.use('room').then(function (r) {
       if (!r) { noteEl.textContent = '지금은 혼자 보는 화면이에요. 링크를 연 다른 사람은 연결되지 않아요.'; return; }
