@@ -77,8 +77,17 @@
     <div id="count" style="text-align:center;margin-bottom:14px;font-size:15px;"></div>
     <div class="seats" id="seats"></div>
   </div>
+  <section id="guestbook" style="width:100%;max-width:720px;box-sizing:border-box;background:#261e1e;border:1px solid #493737;border-radius:16px;padding:15px;order:7">
+    <button id="guestToggle" class="chip" style="width:100%">📒 공용 방명록 열기 ▾</button>
+    <div id="guestPanel" hidden style="margin-top:12px">
+      <div id="guestMessages" style="max-height:310px;overflow-y:auto;display:flex;flex-direction:column;gap:9px;margin-bottom:12px;font-size:13px">불러오는 중...</div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap"><input id="guestName" maxlength="12" placeholder="닉네임" style="flex:1;min-width:90px"><input id="guestText" maxlength="160" placeholder="한마디 남기기 (160자)" style="flex:3;min-width:160px;text-align:left"></div>
+      <button id="guestSend" style="margin-top:9px;width:100%">글 남기기</button>
+      <small id="guestInfo" style="display:block;margin-top:7px">실제 이용자만 작성할 수 있어요.</small>
+    </div>
+  </section>
   <small id="note">말없이 같이 일하는 공간이에요.</small>
-  <small style="font-size:10px;opacity:.55">출그닝 v4 · 책상 확대</small>
+  <small style="font-size:10px;opacity:.55">출그닝 v5 · 방명록 · 사무실 연출</small>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
@@ -209,6 +218,13 @@
     w.appendChild(cap2);
     return w;
   }
+  // 방마다 동일하게 보이는 연출용 직원. 실제 출근 인원과 별도 표시.
+  var DEMO_NAMES = ['김대리','박주임','이과장','최사원','정대리','오팀장','한주임','윤사원','서대리','임과장','조사원','문대리','강주임','신대리','유사원','배과장','남주임','차대리','송사원','권대리'];
+  var DEMO_STATES = ['work','focus','coffee','meet','lunch','away','sleepy','hungry','overtime','happy'];
+  var demoCount = 5 + Math.floor(Math.random() * 16);
+  var demoStaff = Array.from({length:demoCount}, function(_,i) {return {name:DEMO_NAMES[i],status:DEMO_STATES[Math.floor(Math.random()*DEMO_STATES.length)],mon:Object.keys(MONS)[i%8],items:[Object.keys(ITEMS)[i%16]]};});
+  function rotateDemo() { demoStaff.forEach(function(p){if(Math.random()<0.22)p.status=DEMO_STATES[Math.floor(Math.random()*DEMO_STATES.length)];}); drawSeats(); }
+  setInterval(rotateDemo, 90000);
   function drawSeats() {
     seatsEl.textContent = '';
     var n = start ? 1 : 0;
@@ -220,8 +236,9 @@
       var nm = (typeof pr.nick === 'string' && pr.nick) ? pr.nick.slice(0, 6) : '·';
       seatsEl.appendChild(seat(nm, 'on', pr.status, pr.items, pr.title, pr.mon, pr.stx));
     });
+    demoStaff.forEach(function(p) { seatsEl.appendChild(seat(p.name, 'on', p.status, p.items, '직원', p.mon, '')); });
     if (start) seatsEl.appendChild(seat(nick || '나', 'me', status, items, title, mon, stx));
-    countEl.textContent = '지금 ' + n + '명이 출근했어요';
+    countEl.textContent = '실제 출근 ' + n + '명 · 사무실 연출 ' + demoStaff.length + '명';
   }
   function sync() {
     try { localStorage.setItem('props', JSON.stringify({ items: items, mon: mon })); localStorage.setItem('workStatus', status); localStorage.setItem('statusText', stx); } catch (e) {}
@@ -360,6 +377,63 @@
       setTimeout(function () { noteEl.textContent = noteText(); }, 2500);
     });
   }
+  // Firebase 공용 방명록: rooms/guestbook/{auth.uid}/messages/{messageId}
+  // 기존 데이터베이스 규칙(auth.uid == $user)을 그대로 활용한다.
+  var guestPanel = document.getElementById('guestPanel');
+  var guestMessages = document.getElementById('guestMessages');
+  var guestName = document.getElementById('guestName');
+  var guestText = document.getElementById('guestText');
+  var guestInfo = document.getElementById('guestInfo');
+  var guestRef = null, guestUid = null, guestLastSend = 0;
+  guestName.value = nick || '';
+  document.getElementById('guestToggle').onclick = function() {
+    guestPanel.hidden = !guestPanel.hidden;
+    this.textContent = guestPanel.hidden ? '📒 공용 방명록 열기 ▾' : '📒 공용 방명록 닫기 ▴';
+  };
+  function displayGuestbook(data) {
+    var all = [];
+    Object.keys(data || {}).forEach(function(uid) {
+      var msgs = data[uid] && data[uid].messages || {};
+      Object.keys(msgs).forEach(function(id) {
+        var m = msgs[id];
+        if (m && typeof m.text === 'string' && typeof m.time === 'number') all.push({uid:uid,id:id,name:m.name,text:m.text,time:m.time});
+      });
+    });
+    all.sort(function(a,b){return b.time-a.time;});
+    guestMessages.textContent = '';
+    if (!all.length) {guestMessages.textContent='첫 방명록을 남겨줘!';return;}
+    all.slice(0,60).forEach(function(m) {
+      var wrap=document.createElement('div'); wrap.style.cssText='background:#332828;border-radius:10px;padding:10px;overflow-wrap:anywhere';
+      var head=document.createElement('div');head.style.cssText='color:#efc5c5;font-size:12px;margin-bottom:5px';
+      head.textContent=(typeof m.name==='string'?m.name.slice(0,12):'익명')+' · '+new Date(m.time).toLocaleString('ko-KR');
+      wrap.appendChild(head);
+      var body=document.createElement('div');body.textContent=m.text.slice(0,160);wrap.appendChild(body);
+      if (m.uid===guestUid) {
+        var del=document.createElement('button');del.textContent='삭제';del.className='chip';del.style.cssText='padding:4px 10px;font-size:11px;margin-top:7px';
+        del.onclick=function(){if(confirm('이 글을 삭제할까?'))guestRef.child(m.uid+'/messages/'+m.id).remove().catch(function(){guestInfo.textContent='삭제에 실패했어.';});};wrap.appendChild(del);
+      }
+      guestMessages.appendChild(wrap);
+    });
+  }
+  if (window.firebase) {
+    firebase.auth().onAuthStateChanged(function(user) {
+      if (!user || guestRef) return;
+      guestUid=user.uid;
+      guestRef=firebase.database().ref('rooms/guestbook');
+      guestRef.on('value',function(snap){displayGuestbook(snap.val());},function(){guestMessages.textContent='방명록 읽기 권한을 확인해 줘.';});
+    });
+  }
+  document.getElementById('guestSend').onclick=function(){
+    var name=guestName.value.trim().slice(0,12)||'익명';
+    var message=guestText.value.trim().slice(0,160);
+    if(!message){guestInfo.textContent='글을 입력해 줘.';return;}
+    if(!guestRef||!guestUid){guestInfo.textContent='연결 중이야. 잠시 후 다시 시도해 줘.';return;}
+    if(Date.now()-guestLastSend<15000){guestInfo.textContent='15초 뒤에 다시 작성할 수 있어.';return;}
+    guestLastSend=Date.now();
+    guestRef.child(guestUid+'/messages').push({name:name,text:message,time:firebase.database.ServerValue.TIMESTAMP})
+      .then(function(){guestText.value='';guestInfo.textContent='등록했어!';})
+      .catch(function(){guestInfo.textContent='등록 실패. Firebase 규칙을 확인해 줘.';guestLastSend=0;});
+  };
   if (window.claude && window.claude.use) {
     window.claude.use('room').then(function (r) {
       if (!r) { noteEl.textContent = '지금은 혼자 보는 화면이에요. 링크를 연 다른 사람은 연결되지 않아요.'; return; }
