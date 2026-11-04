@@ -26,16 +26,16 @@
   button { font-size: 15px; padding: 12px 24px; border: 0; border-radius: 999px; background: #e5383b; color: #fff; font-weight: 600; cursor: pointer; }
   button.out { background: #3d2f2f; color: #eee; }
   input { font-size: 14px; padding: 8px 14px; border-radius: 999px; border: 1px solid #4a3a3a; background: #2a2121; color: #eee; width: 120px; text-align: center; }
-  .seats { display: grid; grid-template-columns: repeat(auto-fill, 77px); gap: 8px; justify-content: center; }
-  .seat { zoom: 0.8; position: relative; width: 96px; height: 120px; box-sizing: border-box; background: #261e1e; border: 3px solid #4a3a3a; border-bottom: 0; border-radius: 8px 8px 0 0; color: #7d6d6d; font-size: 13px; text-align: center; }
+  .seats { display: grid; grid-template-columns: repeat(auto-fill, 112px); gap: 10px; justify-content: center; }
+  .seat { zoom: 1; position: relative; width: 96px; height: 120px; box-sizing: border-box; background: #261e1e; border: 3px solid #4a3a3a; border-bottom: 0; border-radius: 8px 8px 0 0; color: #7d6d6d; font-size: 13px; text-align: center; }
   .seat::after { content: ""; position: absolute; left: -3px; right: -3px; bottom: 0; height: 16px; background: #5a4343; border-radius: 3px 3px 0 0; }
-  .seat .lbl { position: absolute; top: 6px; left: 10px; right: 10px; height: 20px; line-height: 20px; box-sizing: border-box; background: #6b604a; color: #cfc3a3; border-bottom: 3px solid #4d4434; border-radius: 3px; font-size: 12px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .seat .lbl { position: absolute; top: 6px; left: 10px; right: 10px; height: 20px; line-height: 20px; box-sizing: border-box; background: #6b604a; color: #cfc3a3; border-bottom: 3px solid #4d4434; border-radius: 3px; font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .seat .lbl.two { height: 32px; line-height: 14px; padding-top: 2px; }
-  .seat .ttl { font-size: 9px; font-weight: 400; line-height: 11px; }
+  .seat .ttl { font-size: 11px; font-weight: 400; line-height: 11px; }
   button.swatch { width: 30px; height: 30px; padding: 0; border-radius: 50%; border: 2px solid transparent; }
   button.swatch.sel { border-color: #fff; }
   .seat.on .lbl, .seat.me .lbl { background: #e2cf9d; color: #2a2121; border-bottom-color: #a8956a; }
-  .seat .shelf { position: absolute; bottom: 12px; left: 0; right: 0; display: flex; justify-content: center; gap: 1px; font-size: 15px; line-height: 18px; z-index: 1; }
+  .seat .shelf { position: absolute; bottom: 12px; left: 0; right: 0; display: flex; justify-content: center; gap: 1px; font-size: 21px; line-height: 23px; z-index: 1; }
   .seat .mon { position: absolute; left: 50%; bottom: 34px; width: 46px; height: 30px; margin-left: -23px; box-sizing: border-box; border-radius: 3px; background: #151010; border: 2px solid #5a4848; }
   .seat .stand { position: absolute; left: 50%; bottom: 16px; width: 10px; height: 18px; margin-left: -5px; background: #5a4848; }
   .seat.on { color: #e8c9c9; }
@@ -46,10 +46,10 @@
   .chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 340px; }
   button.chip { font-size: 14px; padding: 8px 14px; background: #2a2121; color: #ddd; border: 1px solid #4a3a3a; font-weight: 400; }
   button.chip.sel { background: #9b2226; border-color: #e5383b; color: #fff; }
-  .seat .mon { text-align: center; font-size: 15px; line-height: 26px; }
+  .seat .mon { text-align: center; font-size: 23px; line-height: 26px; }
   .seat.pause .mon { background: #3a2a2a; box-shadow: none; }
-  .cell { width: 77px; }
-  .cap { height: 14px; line-height: 14px; font-size: 10px; text-align: center; color: #d9b8b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cell { width: 112px; }
+  .cap { height: 19px; line-height: 19px; font-size: 12px; text-align: center; color: #d9b8b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .cap2 { color: #f2d49b; }
   .seat .prop { position: absolute; bottom: 12px; font-size: 15px; line-height: 1; z-index: 1; }
   .seat .pl { left: 5px; }
@@ -78,7 +78,7 @@
     <div class="seats" id="seats"></div>
   </div>
   <small id="note">말없이 같이 일하는 공간이에요.</small>
-  <small style="font-size:10px;opacity:.55">출그닝 v3 · 상태 저장 개선</small>
+  <small style="font-size:10px;opacity:.55">출그닝 v4 · 책상 확대</small>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
