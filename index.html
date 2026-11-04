@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>출그닝 · 온라인 사무실</title>
+<style>
+  :root { box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); color-scheme: dark; }
+  html, body { min-height: 100%; margin: 0; }
+  body { background: #1f1a1a; color: #eee; display: flex; flex-direction: column; align-items: center;
+         padding: 16px 16px 28px; gap: 12px; font-family: -apple-system, "Noto Sans KR", sans-serif; }
+  h1 { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 600; margin: 0; color: #f0d6d6; letter-spacing: 1px; }
+  .logo { width: 34px; height: 34px; border-radius: 9px; background: #e5383b; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800; }
+  #status { font-size: 13px; color: #b09a9a; }
+  #timer { font-size: 28px; font-variant-numeric: tabular-nums; letter-spacing: 1px; min-height: 34px; }
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; max-width: 340px; box-sizing: border-box; background: #261e1e; border-radius: 14px; padding: 10px 16px; }
+  .row2 { display: flex; gap: 8px; }
+  #deco { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%; }
+  #deco[hidden] { display: none; }
+  body > * { order: 5; }
+  body > h1 { order: 0; }
+  body > .top { order: 1; }
+  body > #rooms { order: 2; }
+  body > div:has(#seats) { order: 3; width: 100%; max-width: 720px; }
+  body > #note { order: 9; }
+  button { font-size: 15px; padding: 12px 24px; border: 0; border-radius: 999px; background: #e5383b; color: #fff; font-weight: 600; cursor: pointer; }
+  button.out { background: #3d2f2f; color: #eee; }
+  input { font-size: 14px; padding: 8px 14px; border-radius: 999px; border: 1px solid #4a3a3a; background: #2a2121; color: #eee; width: 120px; text-align: center; }
+  .seats { display: grid; grid-template-columns: repeat(auto-fill, 77px); gap: 8px; justify-content: center; }
+  .seat { zoom: 0.8; position: relative; width: 96px; height: 120px; box-sizing: border-box; background: #261e1e; border: 3px solid #4a3a3a; border-bottom: 0; border-radius: 8px 8px 0 0; color: #7d6d6d; font-size: 13px; text-align: center; }
+  .seat::after { content: ""; position: absolute; left: -3px; right: -3px; bottom: 0; height: 16px; background: #5a4343; border-radius: 3px 3px 0 0; }
+  .seat .lbl { position: absolute; top: 6px; left: 10px; right: 10px; height: 20px; line-height: 20px; box-sizing: border-box; background: #6b604a; color: #cfc3a3; border-bottom: 3px solid #4d4434; border-radius: 3px; font-size: 12px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .seat .lbl.two { height: 32px; line-height: 14px; padding-top: 2px; }
+  .seat .ttl { font-size: 9px; font-weight: 400; line-height: 11px; }
+  button.swatch { width: 30px; height: 30px; padding: 0; border-radius: 50%; border: 2px solid transparent; }
+  button.swatch.sel { border-color: #fff; }
+  .seat.on .lbl, .seat.me .lbl { background: #e2cf9d; color: #2a2121; border-bottom-color: #a8956a; }
+  .seat .shelf { position: absolute; bottom: 12px; left: 0; right: 0; display: flex; justify-content: center; gap: 1px; font-size: 15px; line-height: 18px; z-index: 1; }
+  .seat .mon { position: absolute; left: 50%; bottom: 34px; width: 46px; height: 30px; margin-left: -23px; box-sizing: border-box; border-radius: 3px; background: #151010; border: 2px solid #5a4848; }
+  .seat .stand { position: absolute; left: 50%; bottom: 16px; width: 10px; height: 18px; margin-left: -5px; background: #5a4848; }
+  .seat.on { color: #e8c9c9; }
+  .seat.on .mon { background: #9b2226; box-shadow: 0 0 10px #9b2226; }
+  .seat.me { color: #fff; font-weight: 700; }
+  .seat.me .mon { background: #e5383b; box-shadow: 0 0 12px #e5383b; }
+  small { color: #8b7f7f; text-align: center; line-height: 1.5; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 340px; }
+  button.chip { font-size: 14px; padding: 8px 14px; background: #2a2121; color: #ddd; border: 1px solid #4a3a3a; font-weight: 400; }
+  button.chip.sel { background: #9b2226; border-color: #e5383b; color: #fff; }
+  .seat .mon { text-align: center; font-size: 15px; line-height: 26px; }
+  .seat.pause .mon { background: #3a2a2a; box-shadow: none; }
+  .cell { width: 77px; }
+  .cap { height: 14px; line-height: 14px; font-size: 10px; text-align: center; color: #d9b8b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cap2 { color: #f2d49b; }
+  .seat .prop { position: absolute; bottom: 12px; font-size: 15px; line-height: 1; z-index: 1; }
+  .seat .pl { left: 5px; }
+  .seat .pr { right: 5px; }
+</style>
+</head>
+<body>
+  <h1><span class="logo">출</span>출그닝 · 온라인 사무실</h1>
+  <div class="top"><div class="tt"><div id="status">아직 출근 전이에요</div>
+  <div id="timer">00:00:00</div></div>
+  <button id="btn">출근하기</button></div>
+  <div class="chips" id="rooms"></div>
+  <button class="chip" id="decoBtn">꾸미기 ▾</button>
+  <div id="deco" hidden>
+  <div class="row2"><input id="nick" maxlength="6" placeholder="이름 (선택)">
+  <input id="title" maxlength="6" placeholder="직함 (선택)"></div>
+  <input id="stext" maxlength="8" placeholder="내 상태 직접 쓰기 (선택)" style="width:240px">
+  <div class="chips" id="chips"></div>
+  <small>책상 위 소품 (최대 4개)</small>
+  <div class="chips" id="items"></div>
+  <small>모니터 색</small>
+  <div class="chips" id="mons"></div>
+  </div>
+  <div>
+    <div id="count" style="text-align:center;margin-bottom:14px;font-size:15px;"></div>
+    <div class="seats" id="seats"></div>
+  </div>
+  <small id="note">말없이 같이 일하는 공간이에요.</small>
+  <small style="font-size:10px;opacity:.55">출그닝 v3 · 상태 저장 개선</small>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+  // ▼▼▼ 여기에 Firebase 설정값을 붙여넣으세요 ▼▼▼
+  var FIREBASE_CONFIG = {
+    apiKey: "AIzaSyDgBG29rQgcoL9NqC4e_dIyDS_2Ux_-jog",
+    authDomain: "fir-5e727.firebaseapp.com",
+    databaseURL: "https://fir-5e727-default-rtdb.firebaseio.com",
+    projectId: "fir-5e727",
+    storageBucket: "fir-5e727.firebasestorage.app",
+    messagingSenderId: "496629570200",
+    appId: "1:496629570200:web:9558c1447f3970fc728eed"
+  };  // ▲▲▲ 여기까지 ▲▲▲
+
+  (function () {
+    if (window.claude) return;
+    var ready = null;
+    var myKey = null;
+    function init() {
+      if (ready) return ready;
+      if (!FIREBASE_CONFIG.databaseURL || !window.firebase) { ready = Promise.resolve(null); return ready; }
+      try {
+        firebase.initializeApp(FIREBASE_CONFIG);
+        ready = firebase.auth().signInAnonymously()
+          .then(function (user) { myKey = user.user.uid; return firebase.database(); })
+          .catch(function () { return null; });
+      } catch (e) { ready = Promise.resolve(null); }
+      return ready;
+    }
+    function makeRoom(db, name) {
+      var ref = db.ref('rooms/' + name), me = ref.child(myKey);
+      var state = {}, list = [], handlers = [];
+      me.onDisconnect().remove().catch(function (e) { console.warn("Disconnect registration failed", e); });
+      ref.on('value', function (snap) {
+        var v = snap.val() || {};
+        list = Object.keys(v).map(function (k) {
+          return { peer: k, by: null, isMe: k === myKey, sameTab: k === myKey, kind: 'viewer', guest: false, presence: v[k] || {}, updatedAt: Date.now() };
+        });
+        handlers.slice().forEach(function (h) { h({ peers: list, joined: [], left: [], updated: [] }); });
+      });
+      return {
+        presence: function (patch) {
+          Object.keys(patch).forEach(function (k) { if (patch[k] === null) delete state[k]; else state[k] = patch[k]; });
+          return me.set(state);
+        },
+        peers: function () { return list; },
+        onPeers: function (h) {
+          handlers.push(h);
+          return function () { handlers = handlers.filter(function (x) { return x !== h; }); };
+        },
+        leave: function () { ref.off(); handlers = []; return me.onDisconnect().cancel().then(function () { return me.remove(); }); }
+      };
+    }
+    window.claude = {
+      use: function (n) {
+        if (n !== 'room') return Promise.resolve(null);
+        return init().then(function (db) {
+          if (!db) return null;
+          return { join: function (name) { return Promise.resolve(makeRoom(db, name)); } };
+        });
+      }
+    };
+  })();
+</script>
+<script>
+  var btn = document.getElementById('btn'), statusEl = document.getElementById('status'),
+      timerEl = document.getElementById('timer'), seatsEl = document.getElementById('seats'),
+      countEl = document.getElementById('count'), nickEl = document.getElementById('nick'),
+      noteEl = document.getElementById('note');
+  var start = null, iv = null, room = null, peers = [], nick = '', title = '', stx = '', status = 'work', items = [], mon = 'red';
+  var STAT = {
+    work: { e: '', t: '근무 중', p: false },
+    focus: { e: '🎧', t: '몰입 중', p: false },
+    meet: { e: '💬', t: '회의 중', p: true },
+    lunch: { e: '🍚', t: '점심 먹는 중', p: true },
+    coffee: { e: '☕', t: '커피 충전 중', p: true },
+    away: { e: '🚶', t: '자리비움', p: true },
+    zone: { e: '😶', t: '멍때리는 중', p: true },
+    sleepy: { e: '😴', t: '졸린 중', p: true },
+    hungry: { e: '🤤', t: '배고픈 중', p: true },
+    angry: { e: '💢', t: '열받는 중', p: false },
+    overtime: { e: '🔥', t: '야근 각', p: false },
+    leave: { e: '🏃', t: '퇴근 마렵다', p: false },
+    cry: { e: '😭', t: '울고 싶은 중', p: false },
+    happy: { e: '🎉', t: '기분 좋음', p: false }
+  };
+  var chipsEl = document.getElementById('chips'), itemsEl = document.getElementById('items'), titleEl = document.getElementById('title'), monsEl = document.getElementById('mons');
+  var MONS = { red: '#e5383b', orange: '#f4845f', yellow: '#f2c14e', green: '#52b788', blue: '#4a90d9', purple: '#9b72cf', pink: '#ee7fb0', white: '#e8e8e8' };
+  var ITEMS = { cup: '☕', plant: '🪴', book: '📚', donut: '🍩', apple: '🍎', tea: '🍵', juice: '🥤', cactus: '🌵', lamp: '💡', phone: '📱', headset: '🎧', pen: '🖊️', clock: '⏰', cookie: '🍪', trophy: '🏆', flower: '🌷' };
+  try { var sv = JSON.parse(localStorage.getItem('props') || '{}'); if (typeof sv.mon === 'string' && Object.prototype.hasOwnProperty.call(MONS, sv.mon)) mon = sv.mon; if (Array.isArray(sv.items)) items = sv.items.filter(function (k) { return Object.prototype.hasOwnProperty.call(ITEMS, k); }).slice(0, 4); } catch (e) {}
+
+  try { var s = localStorage.getItem('checkin'); if (s) start = parseInt(s, 10); } catch (e) {}
+  try { nick = localStorage.getItem('nick') || ''; title = localStorage.getItem('title') || ''; } catch (e) {}
+  try { var savedStatus = localStorage.getItem('workStatus'); if (savedStatus && Object.prototype.hasOwnProperty.call(STAT, savedStatus)) status = savedStatus; stx = (localStorage.getItem('statusText') || '').slice(0, 8); } catch (e) {}
+  nickEl.value = nick; titleEl.value = title; document.getElementById('stext').value = stx;
+
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function drawTimer() {
+    var t = Math.max(0, Math.floor((Date.now() - start) / 1000));
+    timerEl.textContent = pad(Math.floor(t / 3600)) + ':' + pad(Math.floor(t / 60) % 60) + ':' + pad(t % 60);
+  }
+  function seat(label, cls, st, dl, ttl, mk, stx) {
+    var d = document.createElement('div');
+    var known = Object.prototype.hasOwnProperty.call(STAT, st);
+    d.className = 'seat' + (cls ? ' ' + cls : '') + (known && STAT[st].p ? ' pause' : '');
+    var tt = (typeof ttl === 'string') ? ttl.slice(0, 6) : '';
+    var l = document.createElement('span'); l.className = 'lbl' + (tt ? ' two' : '');
+    if (tt) { var t1 = document.createElement('div'); t1.className = 'ttl'; t1.textContent = tt; l.appendChild(t1); }
+    var n1 = document.createElement('div'); n1.textContent = label; l.appendChild(n1); d.appendChild(l);
+    var m = document.createElement('div'); m.className = 'mon'; if (known && STAT[st].e) m.textContent = STAT[st].e;
+    if (cls && !(known && STAT[st].p) && typeof mk === 'string' && Object.prototype.hasOwnProperty.call(MONS, mk)) { m.style.background = MONS[mk]; m.style.boxShadow = '0 0 12px ' + MONS[mk]; }
+    d.appendChild(m);
+    var list = Array.isArray(dl) ? dl : [];
+    var sh = document.createElement('div'); sh.className = 'shelf';
+    list.slice(0, 4).forEach(function (k) {
+      if (typeof k === 'string' && Object.prototype.hasOwnProperty.call(ITEMS, k)) { var s1 = document.createElement('span'); s1.textContent = ITEMS[k]; sh.appendChild(s1); }
+    });
+    d.appendChild(sh);
+    var sd = document.createElement('div'); sd.className = 'stand'; d.appendChild(sd);
+    var w = document.createElement('div'); w.className = 'cell';
+    w.appendChild(d);
+    var cap = document.createElement('div'); cap.className = 'cap';
+    if (cls && known && st !== 'work') { cap.textContent = STAT[st].t; }
+    w.appendChild(cap);
+    var cap2 = document.createElement('div'); cap2.className = 'cap cap2';
+    if (cls && typeof stx === 'string' && stx) { cap2.textContent = stx.slice(0, 8); }
+    w.appendChild(cap2);
+    return w;
+  }
+  function drawSeats() {
+    seatsEl.textContent = '';
+    var n = start ? 1 : 0;
+    peers.forEach(function (p) {
+      if (p.isMe) return;
+      var pr = p.presence || {};
+      if (pr.state !== 'in') return;
+      n++;
+      var nm = (typeof pr.nick === 'string' && pr.nick) ? pr.nick.slice(0, 6) : '·';
+      seatsEl.appendChild(seat(nm, 'on', pr.status, pr.items, pr.title, pr.mon, pr.stx));
+    });
+    if (start) seatsEl.appendChild(seat(nick || '나', 'me', status, items, title, mon, stx));
+    countEl.textContent = '지금 ' + n + '명이 출근했어요';
+  }
+  function sync() {
+    try { localStorage.setItem('props', JSON.stringify({ items: items, mon: mon })); localStorage.setItem('workStatus', status); localStorage.setItem('statusText', stx); } catch (e) {}
+    if (room) room.presence({ state: start ? 'in' : 'out', nick: nick, status: status, items: items, title: title, mon: mon, stx: stx });
+  }
+  function drawChips() {
+    chipsEl.textContent = '';
+    function chip(text, sel, fn) {
+      var b = document.createElement('button');
+      b.className = 'chip' + (sel ? ' sel' : ''); b.textContent = text;
+      b.addEventListener('click', function () { fn(); render(); sync(); });
+      chipsEl.appendChild(b);
+    }
+    if (start) {
+      Object.keys(STAT).forEach(function (k) {
+        chip((STAT[k].e ? STAT[k].e + ' ' : '') + STAT[k].t, status === k, function () { status = k; });
+      });
+    }
+    monsEl.textContent = '';
+    Object.keys(MONS).forEach(function (k) {
+      var sw = document.createElement('button');
+      sw.className = 'swatch' + (mon === k ? ' sel' : ''); sw.style.background = MONS[k]; sw.setAttribute('aria-label', k);
+      sw.addEventListener('click', function () { mon = k; render(); sync(); });
+      monsEl.appendChild(sw);
+    });
+    itemsEl.textContent = '';
+    Object.keys(ITEMS).forEach(function (k) {
+      var b = document.createElement('button');
+      b.className = 'chip' + (items.indexOf(k) >= 0 ? ' sel' : ''); b.textContent = ITEMS[k];
+      b.addEventListener('click', function () {
+        var i = items.indexOf(k);
+        if (i >= 0) items.splice(i, 1); else if (items.length < 4) items.push(k);
+        render(); sync();
+      });
+      itemsEl.appendChild(b);
+    });
+  }
+  function render() {
+    drawChips();
+    if (start) {
+      statusEl.textContent = (STAT[status] ? STAT[status].t : '근무 중') + (stx ? ' · ' + stx : '');
+      btn.textContent = '퇴근하기'; btn.className = 'out';
+      drawTimer(); if (!iv) iv = setInterval(drawTimer, 1000);
+    } else {
+      statusEl.textContent = '아직 출근 전이에요';
+      btn.textContent = '출근하기'; btn.className = '';
+      timerEl.textContent = '00:00:00';
+      if (iv) { clearInterval(iv); iv = null; }
+    }
+    drawSeats();
+  }
+  btn.addEventListener('click', function () {
+    if (start) { start = null; try { localStorage.removeItem('checkin'); } catch (e) {} }
+    else { start = Date.now(); try { localStorage.setItem('checkin', String(start)); } catch (e) {} }
+    render(); sync();
+  });
+  titleEl.addEventListener('change', function () {
+    title = titleEl.value.trim();
+    try { localStorage.setItem('title', title); } catch (e) {}
+    render(); sync();
+  });
+  nickEl.addEventListener('change', function () {
+    nick = nickEl.value.trim();
+    try { localStorage.setItem('nick', nick); } catch (e) {}
+    render(); sync();
+  });
+  render();
+
+  var MAXROOM = 50, ROOMS = 5, MAXFLOOR = 20;
+  var floor = 0, roomNo = 0, lobbyRef = null, busy = false;
+  var roomsEl = document.getElementById('rooms');
+  var stxEl = document.getElementById('stext');
+  stxEl.value = stx;
+  stxEl.addEventListener('input', function () { stx = stxEl.value.trim().slice(0, 8); render(); sync(); });
+  var decoBtn = document.getElementById('decoBtn'), decoEl = document.getElementById('deco');
+  decoBtn.addEventListener('click', function () {
+    var wasHidden = decoEl.hidden;
+    decoEl.hidden = !wasHidden;
+    decoBtn.textContent = wasHidden ? '꾸미기 ▴' : '꾸미기 ▾';
+  });
+  function roomName(f, r) { return 'f' + f + '-r' + r; }
+  function noteText() { return floor + '층 ' + roomNo + '호실 · 방당 최대 ' + MAXROOM + '명 (한 층 ' + (MAXROOM * ROOMS) + '명)'; }
+  function drawRooms() {
+    roomsEl.textContent = '';
+    if (!floor) return;
+    for (var i = 1; i <= ROOMS; i++) {
+      (function (k) {
+        var b = document.createElement('button');
+        b.className = 'chip' + (k === roomNo ? ' sel' : ''); b.textContent = k + '호실';
+        b.addEventListener('click', function () { switchTo(k); });
+        roomsEl.appendChild(b);
+      })(i);
+    }
+  }
+  function tryJoin(lobby, f, r, cb) {
+    lobby.join(roomName(f, r)).then(function (nr) {
+      nr.presence({ state: 'out' });
+      setTimeout(function () {
+        if (nr.peers().length > MAXROOM) {
+          var done = function () { cb(null); };
+          nr.leave().then(done, done);
+        } else { cb(nr); }
+      }, 1500);
+    }, function () { cb(undefined); });
+  }
+  function attach(nr, f, r) {
+    var old = room;
+    room = nr; floor = f; roomNo = r;
+    peers = nr.peers();
+    nr.onPeers(function (ch) { peers = ch.peers; drawSeats(); });
+    if (old && old !== lobbyRef && old !== nr && typeof old.leave === 'function') old.leave();
+    sync(); drawSeats(); drawRooms();
+    noteEl.textContent = noteText();
+  }
+  function fallback(lobby) {
+    room = lobby;
+    lobby.onPeers(function (ch) { peers = ch.peers; drawSeats(); });
+    sync();
+    noteEl.textContent = '말없이 같이 일하는 공간이에요. 이 링크를 연 사람들이 서로 보여요.';
+  }
+  function autoJoin(lobby, f, r) {
+    if (f > MAXFLOOR) { noteEl.textContent = '모든 층이 가득 찼어요. 나중에 다시 와주세요.'; return; }
+    tryJoin(lobby, f, r, function (nr) {
+      if (nr) { attach(nr, f, r); return; }
+      if (nr === undefined) { fallback(lobby); return; }
+      if (r < ROOMS) autoJoin(lobby, f, r + 1); else autoJoin(lobby, f + 1, 1);
+    });
+  }
+  function switchTo(r) {
+    if (!lobbyRef || busy || !floor || r === roomNo) return;
+    busy = true; noteEl.textContent = r + '호실로 이동 중…';
+    tryJoin(lobbyRef, floor, r, function (nr) {
+      busy = false;
+      if (nr) { attach(nr, floor, r); return; }
+      noteEl.textContent = nr === null ? r + '호실은 가득 찼어요 (최대 ' + MAXROOM + '명)' : r + '호실에 들어가지 못했어요';
+      setTimeout(function () { noteEl.textContent = noteText(); }, 2500);
+    });
+  }
+  if (window.claude && window.claude.use) {
+    window.claude.use('room').then(function (r) {
+      if (!r) { noteEl.textContent = '지금은 혼자 보는 화면이에요. 링크를 연 다른 사람은 연결되지 않아요.'; return; }
+      lobbyRef = r; autoJoin(r, 1, 1);
+      sync();
+      
+      noteEl.textContent = '방을 찾는 중이에요…';
+    }).catch(function () {});
+  }
+</script>
+</body>
+</html>
