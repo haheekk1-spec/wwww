@@ -26,13 +26,16 @@
   button { font-size: 15px; padding: 12px 24px; border: 0; border-radius: 999px; background: #e5383b; color: #fff; font-weight: 600; cursor: pointer; }
   button.out { background: #3d2f2f; color: #eee; }
   input { font-size: 14px; padding: 8px 14px; border-radius: 999px; border: 1px solid #4a3a3a; background: #2a2121; color: #eee; width: 120px; text-align: center; }
-  .seats { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 9px; justify-items:center; max-width:560px; margin:auto; }
-  .seats.cols3 { grid-template-columns: repeat(3,minmax(0,1fr)); max-width:430px; }
-  .seats .cell { width:100%; max-width:120px; min-width:0; }
-  .seats .seat { width:100%; }
+  .seats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); column-gap:clamp(12px,4vw,38px); row-gap:25px; justify-items:stretch; max-width:760px; margin:auto; padding:16px 10px 25px; background:repeating-linear-gradient(0deg,#343138 0,#343138 5px,#39363b 5px,#39363b 60px); border-radius:12px; }
+  .seats.cols3 { grid-template-columns:repeat(3,minmax(0,1fr)); max-width:760px; }
+  .seats .cell { width:100%; min-width:0; }
+  .seats .seat { width:100%; height:116px; border-radius:5px; background:#493b37; border:3px solid #8c7d7a; border-bottom:9px solid #8a6550; }
   .seat.empty { opacity:.58; border-style:dashed; cursor:pointer; }
   .seat.empty .mon { background:#201818; box-shadow:none; }
   .seat.empty .lbl { background:#403535; color:#bbaaaa; }
+  .seat.boss { border-color:#d8a74b; background:#352a21; box-shadow:0 0 0 2px #6d502b; }
+  .seat.boss .lbl { background:#c49a4a; color:#241b11; border-bottom-color:#85642d; }
+  .seat.boss .mon { font-size:25px; }
   .seat.npc { border-color:#71526b; }
   .seat.npc .lbl { background:#795c78; color:white; border-bottom-color:#4f364e; }
   .seat.npc .mon { border-radius:6px; }
@@ -66,6 +69,40 @@
   .seat .prop { position: absolute; bottom: 12px; font-size: 15px; line-height: 1; z-index: 1; }
   .seat .pl { left: 5px; }
   .seat .pr { right: 5px; }
+  .seats .cell:nth-child(3n+2){border-left:3px dashed #7b7370;border-right:3px dashed #7b7370;padding:0 4px;box-sizing:border-box}
+  .seat .avatar{position:absolute;left:50%;top:29px;transform:translateX(-50%);font-size:28px;z-index:3;filter:drop-shadow(0 2px 2px #241d1d);pointer-events:none;line-height:1}
+  .seat .avatar .arms{position:absolute;top:14px;left:-8px;font-size:13px;letter-spacing:20px;opacity:0}
+  .seat .avatar.cheer{animation:cheer .55s ease-in-out 4}
+  .seat .avatar.cheer .arms{opacity:1}
+  .seat .avatar.sleep{animation:sleep 1.6s ease-in-out infinite;transform-origin:bottom center}
+  .seat .avatar.coffee{animation:coffee 1.5s ease-in-out infinite}
+  .seat .avatar.work{animation:work 0.35s ease-in-out infinite alternate}
+  .seat .avatar.dance{animation:dance .55s ease-in-out infinite}
+  .seat .avatar.panic{animation:panic .24s ease-in-out infinite}
+  .seat .mon{z-index:4;bottom:28px;transform:scale(.78);transform-origin:bottom center}
+  .seat .stand{z-index:4}
+  .seat .lbl{z-index:5}
+  .seat .shelf{z-index:5}
+  .seat::before{content:'';position:absolute;top:-7px;left:-4px;right:-4px;border-top:5px solid #9b8984}
+  .seat .speech{position:absolute;z-index:8;left:50%;top:-33px;transform:translateX(-50%);background:#fff6de;color:#40302c;border-radius:11px;padding:4px 7px;white-space:nowrap;max-width:145px;overflow:hidden;text-overflow:ellipsis;font-size:10px;box-shadow:0 2px 6px #0007}
+  .seat.boss .avatar{cursor:pointer;pointer-events:auto}
+  .seat.empty{opacity:.8}
+  .seat.empty .avatar{display:none}
+  .action-menu{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:10px auto 16px;max-width:520px}
+  .action-menu button{padding:9px 11px;font-size:12px;border-radius:12px;background:#453536}
+  .action-menu button.sel{background:#b54a55}
+  .office-head{display:flex;align-items:center;justify-content:center;gap:12px;margin:12px auto;font-size:13px;color:#dbc8bb}
+  .boss-modal{position:fixed;inset:0;background:#000b;display:flex;align-items:center;justify-content:center;z-index:30;padding:18px}
+  .boss-modal[hidden]{display:none}
+  .boss-box{width:min(350px,100%);padding:22px;background:#30262c;border:1px solid #c49a4a;border-radius:20px;text-align:center;box-sizing:border-box}
+  .boss-box input{width:90%;box-sizing:border-box;margin:12px auto}
+  @keyframes cheer{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-12px) rotate(-8deg)}}
+  @keyframes sleep{0%,100%{transform:translateX(-50%) rotate(0)}50%{transform:translateX(-50%) rotate(18deg) translateY(5px)}}
+  @keyframes coffee{0%,100%{transform:translateX(-50%) rotate(0)}50%{transform:translateX(-50%) rotate(-12deg)}}
+  @keyframes work{from{transform:translateX(-50%) translateY(0)}to{transform:translateX(-50%) translateY(2px)}}
+  @keyframes dance{0%,100%{transform:translateX(-50%) rotate(-14deg)}50%{transform:translateX(-50%) rotate(14deg) translateY(-5px)}}
+  @keyframes panic{0%,100%{transform:translateX(-50%) translateX(-2px)}50%{transform:translateX(-50%) translateX(2px)}}
+  @media(prefers-reduced-motion:reduce){.seat .avatar{animation:none!important}}
 </style>
 </head>
 <body>
@@ -86,9 +123,10 @@
   <div class="chips" id="mons"></div>
   </div>
   <div>
-    <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px"><span style="font-size:12px;color:#cdbaba">한 줄 자리</span><button class="chip sel" id="cols3" style="padding:6px 12px">3자리</button><button class="chip" id="cols4" style="padding:6px 12px">4자리</button></div>
+    <div class="office-head">🏢 회사 사무실 · 복도와 파티션 · 30석</div>
     <div id="count" style="text-align:center;margin-bottom:14px;font-size:15px;"></div>
-    <div class="seats" id="seats"></div>
+    <div class="seats cols3" id="seats"></div>
+    <div id="actionMenu" class="action-menu" hidden></div>
   </div>
   <section id="stickers" style="width:100%;max-width:720px;box-sizing:border-box;background:#261e1e;border:1px solid #493737;border-radius:16px;padding:14px;order:7;text-align:center">
     <strong>💌 오늘의 스티커</strong><div style="font-size:12px;color:#bca8a8;margin:7px">출근해서 스티커를 남겨봐! 내 스티커는 다른 접속자에게도 보여.</div>
@@ -96,8 +134,9 @@
     <div id="stickerWall" style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:12px"></div>
     <small id="stickerInfo"></small>
   </section>
+  <div id="bossModal" class="boss-modal" hidden><div class="boss-box"><h2>👑 사장님 비밀 멘트</h2><small>사장님을 다섯 번 터치해서 열었어!</small><input id="bossLine" maxlength="35" placeholder="사장님 한마디"><div><button id="bossSave">저장</button> <button class="out" id="bossClose">닫기</button></div><small id="bossHelp"></small></div></div>
   <small id="note">말없이 같이 일하는 공간이에요.</small>
-  <small style="font-size:10px;opacity:.55">출그닝 v6 · 자리 선택 · 스티커</small>
+  <small style="font-size:10px;opacity:.55">출그닝 v8 · 캐릭터 동작 · 30석</small>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
@@ -239,14 +278,21 @@
     {name:'식곤증왕',title:'낮잠연구',status:'sleepy',mon:'yellow',items:['apple'],stx:'눈 감김',emoji:'🐻'},
     {name:'선인장씨',title:'무언팀',status:'work',mon:'white',items:['cactus','plant','flower'],stx:'물 주세요',emoji:'🌵'}
   ];
-  var seatNo = Number(localStorage.getItem('seatNo') || 1);
-  if (!Number.isInteger(seatNo) || seatNo<1 || seatNo>12) seatNo=1;
-  var cols = Number(localStorage.getItem('seatCols') || 3)===4?4:3;
+  var seatNo = Number(localStorage.getItem('seatNo') || 4);
+  if (!Number.isInteger(seatNo) || seatNo<1 || seatNo>30) seatNo=2;
+  var POSITIONS = ['사장님 왼팔','👑 사장님','사장님 오른팔','기획팀장','기획팀','기획팀','개발팀장','개발팀','개발팀','디자인팀장','디자인팀','디자인팀','운영팀장','운영팀','운영팀','마케팅팀장','마케팅팀','마케팅팀','인사팀장','인사팀','인사팀','재무팀장','재무팀','재무팀','고객지원팀장','고객지원','고객지원','자유석','자유석','자유석'];
+  var BOSS = {name:'사장님',title:'대표이사',status:'work',mon:'yellow',items:['trophy','phone','clock','lamp'],stx:'',emoji:'😎'};
+  var MOTIONS = {work:{name:'열일',emoji:'👩‍💻'},cheer:{name:'만세',emoji:'🙌'},sleep:{name:'졸기',emoji:'😴'},coffee:{name:'커피',emoji:'☕'},dance:{name:'춤추기',emoji:'🕺'},panic:{name:'멘붕',emoji:'😵'}};
+  var motion=localStorage.getItem('myMotion')||'work';if(!MOTIONS[motion])motion='work';
+  var motionAt=Number(localStorage.getItem('motionAt')||0);
+  var bossLine=localStorage.getItem('bossLine')||'다들 일하고 있는 거 맞죠? 👀';
+  var bossTaps=0,bossTapTime=0;
   var mySticker = localStorage.getItem('mySticker') || '';
-  var npcSeed = (floor||1)*97+(roomNo||1)*31;
+  var npcSeed = 0;
   function npcRand(n){ var x=Math.sin(n*127.1+npcSeed*13.7)*43758.5453;return x-Math.floor(x); }
   function getNpcs(){
-    var count=Math.floor(npcRand(5)*3), result=[];
+    npcSeed=(floor||1)*97+(roomNo||1)*31;
+    var count=Math.floor(npcRand(5)*2), result=[];
     for(var i=0;i<count;i++){
       var ix=Math.floor(npcRand(i+12)*NPCS.length),p=NPCS[ix];
       if(result.some(function(x){return x.name===p.name;})) continue;
@@ -254,58 +300,81 @@
     }
     return result;
   }
+  function decorateAvatar(node, emoji, act, bubble){
+    var desk=node.querySelector('.seat');
+    var av=document.createElement('span');av.className='avatar '+(MOTIONS[act]?act:'work');av.textContent=emoji||'🙂';
+    if(act==='cheer'){var arms=document.createElement('span');arms.className='arms';arms.textContent='🙌';av.appendChild(arms);}
+    desk.appendChild(av);
+    if(bubble){var sp=document.createElement('span');sp.className='speech';sp.textContent=bubble;desk.appendChild(sp);}
+    return av;
+  }
   function drawSeats() {
-    seatsEl.textContent=''; seatsEl.className='seats'+(cols===3?' cols3':'');
-    document.getElementById('cols3').className='chip'+(cols===3?' sel':'');
-    document.getElementById('cols4').className='chip'+(cols===4?' sel':'');
-    var slots=Array(12).fill(null), occupied=0;
-    var active=peers.filter(function(p){return !p.isMe && p.presence && p.presence.state==='in';});
-    // 선착순 자리 배치: 같은 번호 충돌 시 다음 빈 자리로 배정.
+    seatsEl.textContent='';seatsEl.className='seats cols3';
+    var slots=Array(30).fill(null),occupied=0;
+    slots[1]={kind:'boss',pr:BOSS};
+    var active=peers.filter(function(p){return !p.isMe&&p.presence&&p.presence.state==='in';});
     active.sort(function(a,b){return String(a.peer).localeCompare(String(b.peer));});
     active.forEach(function(p){
-      var pr=p.presence, desired=Number(pr.seatNo)-1;
-      if(!Number.isInteger(desired)||desired<0||desired>=12)desired=0;
-      while(slots[desired]) desired=(desired+1)%12;
-      slots[desired]={kind:'real',pr:pr};occupied++;
+      var pr=p.presence,desired=Number(pr.seatNo)-1;
+      if(!Number.isInteger(desired)||desired<0||desired>=30||desired===1)desired=3;
+      for(var j=0;j<29&&slots[desired];j++)desired=(desired+1)%30;
+      if(!slots[desired]){slots[desired]={kind:'real',pr:pr};occupied++;}
     });
     if(start){
-      var mine=seatNo-1;
-      while(slots[mine])mine=(mine+1)%12;
-      slots[mine]={kind:'me'};occupied++;
+      var mine=seatNo-1;if(mine<0||mine>=30||mine===1)mine=3;
+      for(var k=0;k<29&&slots[mine];k++)mine=(mine+1)%30;
+      if(!slots[mine]){slots[mine]={kind:'me'};occupied++;}
     }
-    var npcList=getNpcs();
-    npcList.forEach(function(p,i){
-      var pos=Math.floor(npcRand(i+30)*12);
-      for(var j=0;j<12 && slots[pos];j++)pos=(pos+1)%12;
+    getNpcs().forEach(function(p,i){
+      var pos=3+Math.floor(npcRand(i+30)*27);
+      for(var j=0;j<29&&slots[pos];j++)pos=(pos+1)%30;
       if(!slots[pos])slots[pos]={kind:'npc',pr:p};
     });
     slots.forEach(function(slot,i){
       var node;
       if(!slot){
-        node=seat('빈 자리','','',[],'',null,'');
+        node=seat('빈자리','','',[],POSITIONS[i],null,'');
         var d=node.querySelector('.seat');d.classList.add('empty');d.setAttribute('role','button');d.tabIndex=0;
-        node.querySelector('.cap').textContent=(i+1)+'번 · 앉기';
+        node.querySelector('.cap').textContent='＋ 터치해서 착석';
         var select=function(){seatNo=i+1;localStorage.setItem('seatNo',String(seatNo));if(!start){start=Date.now();localStorage.setItem('checkin',String(start));}render();sync();};
         d.onclick=select;d.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();select();}};
       }else if(slot.kind==='me'){
         node=seat(nick||'나','me',status,items,title,mon,stx);
-        node.querySelector('.cap2').textContent=(stx?stx+' · ':'')+(i+1)+'번 자리';
+        decorateAvatar(node,motion==='work'?'🙂':MOTIONS[motion].emoji,motion,motion==='sleep'?'Zzz...':motion==='cheer'?'야호!':null);
+        node.querySelector('.cap2').textContent=POSITIONS[i];
       }else if(slot.kind==='real'){
-        var pr=slot.pr;
+        var pr=slot.pr,act=MOTIONS[pr.motion]?pr.motion:'work';
         node=seat((pr.nick||'동료').slice(0,6),'on',pr.status,pr.items,pr.title,pr.mon,pr.stx);
+        decorateAvatar(node,act==='work'?'🙂':MOTIONS[act].emoji,act,act==='sleep'?'Zzz...':null);
+        node.querySelector('.cap2').textContent=POSITIONS[i];
       }else{
         var p=slot.pr;
-        node=seat(p.name,'on npc',p.status,p.items,p.title,p.mon,p.stx);
-        node.querySelector('.mon').textContent=p.emoji;
-        node.querySelector('.cap2').textContent=p.stx;
+        node=seat(p.name,slot.kind==='boss'?'on npc boss':'on npc',p.status,p.items,p.title,p.mon,p.stx);
+        var av=decorateAvatar(node,p.emoji,slot.kind==='boss'?'work':p.status==='sleepy'?'sleep':'work',slot.kind==='boss'?bossLine:null);
+        if(slot.kind==='boss'){
+          av.setAttribute('role','button');av.tabIndex=0;av.title='👑 사장님';
+          var tap=function(){var now=Date.now();if(now-bossTapTime>2500)bossTaps=0;bossTapTime=now;bossTaps++;if(bossTaps>=5){bossTaps=0;document.getElementById('bossLine').value=bossLine;document.getElementById('bossModal').hidden=false;}};
+          av.onclick=tap;av.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();tap();}};
+        }
+        node.querySelector('.cap2').textContent=slot.kind==='boss'?'👑 NPC 고정석':POSITIONS[i];
       }
       seatsEl.appendChild(node);
     });
-    countEl.textContent='실제 출근 '+occupied+'명 · '+(floor?floor+'층 '+roomNo+'호실 · ':'')+'빈 책상을 눌러 자리 선택';
+    countEl.textContent='실제 출근 '+occupied+'명 · '+(floor?floor+'층 '+roomNo+'호실 · ':'')+'빈 책상 터치해서 착석';
+    document.getElementById('actionMenu').hidden=!start;
     drawStickerWall();
   }
-  document.getElementById('cols3').onclick=function(){cols=3;localStorage.setItem('seatCols','3');drawSeats();};
-  document.getElementById('cols4').onclick=function(){cols=4;localStorage.setItem('seatCols','4');drawSeats();};
+  var actionMenu=document.getElementById('actionMenu');
+  Object.keys(MOTIONS).forEach(function(key){
+    var b=document.createElement('button');b.textContent=MOTIONS[key].emoji+' '+MOTIONS[key].name;
+    b.onclick=function(){motion=key;motionAt=Date.now();localStorage.setItem('myMotion',motion);localStorage.setItem('motionAt',String(motionAt));render();sync();};
+    actionMenu.appendChild(b);
+  });
+  document.getElementById('bossClose').onclick=function(){document.getElementById('bossModal').hidden=true;};
+  document.getElementById('bossSave').onclick=function(){
+    bossLine=document.getElementById('bossLine').value.trim().slice(0,35)||'다들 일하고 있는 거 맞죠? 👀';
+    localStorage.setItem('bossLine',bossLine);document.getElementById('bossModal').hidden=true;drawSeats();
+  };
   function drawStickerWall(){
     var wall=document.getElementById('stickerWall');wall.textContent='';
     var all=[];
@@ -318,7 +387,7 @@
   ['👍','❤️','🔥','☕','🎉','😭','💪','🍀'].forEach(function(st){var b=document.createElement('button');b.className='chip';b.textContent=st;b.onclick=function(){if(!start){document.getElementById('stickerInfo').textContent='출근한 다음 남길 수 있어!';return;}mySticker=st;localStorage.setItem('mySticker',st);sync();drawStickerWall();document.getElementById('stickerInfo').textContent='스티커를 남겼어!';};document.getElementById('stickerButtons').appendChild(b);});
   function sync() {
     try { localStorage.setItem('props', JSON.stringify({ items: items, mon: mon })); localStorage.setItem('workStatus', status); localStorage.setItem('statusText', stx); } catch (e) {}
-    if (room) room.presence({ state: start ? 'in' : 'out', nick: nick, status: status, items: items, title: title, mon: mon, stx: stx, seatNo: seatNo, sticker: mySticker });
+    if (room) room.presence({ state: start ? 'in' : 'out', nick: nick, status: status, items: items, title: title, mon: mon, stx: stx, seatNo: seatNo, sticker: mySticker, motion: motion, motionAt: motionAt });
   }
   function drawChips() {
     chipsEl.textContent = '';
@@ -364,6 +433,7 @@
       timerEl.textContent = '00:00:00';
       if (iv) { clearInterval(iv); iv = null; }
     }
+    Array.prototype.forEach.call(actionMenu.children,function(b,i){b.classList.toggle('sel',Object.keys(MOTIONS)[i]===motion);});
     drawSeats();
   }
   btn.addEventListener('click', function () {
@@ -383,7 +453,7 @@
   });
   // 초기 화면은 모든 설정값을 읽은 뒤 렌더링한다.
 
-  var MAXROOM = 12, ROOMS = 5, MAXFLOOR = 20;
+  var MAXROOM = 29, ROOMS = 5, MAXFLOOR = 20;
   var floor = 0, roomNo = 0, lobbyRef = null, busy = false;
   var roomsEl = document.getElementById('rooms');
   var stxEl = document.getElementById('stext');
@@ -413,7 +483,7 @@
     lobby.join(roomName(f, r)).then(function (nr) {
       nr.presence({ state: 'out' });
       setTimeout(function () {
-        if (nr.peers().length > MAXROOM) {
+        if (nr.peers().filter(function(p){return p.presence&&p.presence.state==='in';}).length > MAXROOM) {
           var done = function () { cb(null); };
           nr.leave().then(done, done);
         } else { cb(nr); }
