@@ -116,6 +116,16 @@
   @keyframes dance{0%,100%{transform:translateX(-50%) rotate(-14deg)}50%{transform:translateX(-50%) rotate(14deg) translateY(-5px)}}
   @keyframes panic{0%,100%{transform:translateX(-50%) translateX(-2px)}50%{transform:translateX(-50%) translateX(2px)}}
   @media(prefers-reduced-motion:reduce){.seat .avatar{animation:none!important}}
+
+  /* v9: 실제 HTML 화면용 작은 직책 명패와 텍스트 상태 */
+  .seat .lbl, .seat .lbl.two { display:flex; align-items:center; justify-content:center; gap:3px; top:auto; bottom:-23px; height:21px!important; line-height:16px!important; padding:2px 3px!important; font-size:10px; white-space:nowrap; z-index:6; }
+  .seat .lbl.two .ttl { display:inline; font-size:10px; font-weight:700; line-height:16px; overflow:hidden; text-overflow:ellipsis; }
+  .seat .person-name {font-size:9px; font-weight:500; flex-shrink:0; max-width:45%; overflow:hidden; text-overflow:ellipsis;}
+  .seat .avatar { top:13px; z-index:3; }
+  .seat .speech { max-width:100px; font-size:9px; }
+  .seats { row-gap:33px; }
+  #chips .chip { font-size:12px; padding:8px 12px; }
+  .office-head { letter-spacing:0; }
 </style>
 </head>
 <body>
@@ -126,9 +136,8 @@
   <div class="chips" id="rooms"></div>
   <button class="chip" id="decoBtn">꾸미기 ▾</button>
   <div id="deco" hidden>
-  <details class="deco-group"><summary>👤 이름 · 직함</summary><div class="row2"><input id="nick" maxlength="6" placeholder="이름 (선택)">
-  <input id="title" maxlength="6" placeholder="직함 (선택)"></div>
-  </details><details class="deco-group"><summary>💬 내 상태</summary><input id="stext" maxlength="8" placeholder="내 상태 직접 쓰기 (선택)" style="width:240px">
+  <details class="deco-group"><summary>👤 내 이름</summary><div class="row2"><input id="nick" maxlength="6" placeholder="이름 (선택)"></div>
+  </details><details class="deco-group"><summary>내 상태 · 글자로 선택</summary><input id="stext" maxlength="8" placeholder="내 상태 직접 쓰기 (선택)" style="width:240px">
   <div class="chips" id="chips"></div>
   </details><details class="deco-group"><summary>🪴 책상 소품 (최대 4개)</summary>
   <div class="chips" id="items"></div>
@@ -149,7 +158,7 @@
   </section>
   <div id="bossModal" class="boss-modal" hidden><div class="boss-box"><h2>👑 사장님 비밀 멘트</h2><small>사장님을 다섯 번 터치해서 열었어!</small><input id="bossLine" maxlength="35" placeholder="사장님 한마디"><div><button id="bossSave">저장</button> <button class="out" id="bossClose">닫기</button></div><small id="bossHelp"></small></div></div>
   <small id="note">말없이 같이 일하는 공간이에요.</small>
-  <small style="font-size:10px;opacity:.55">출그닝 v8 · 캐릭터 동작 · 12석</small>
+  <small style="font-size:10px;opacity:.55">출그닝 v9 · 캐릭터 동작 · 12석</small>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
@@ -237,7 +246,7 @@
     cry: { e: '😭', t: '울고 싶은 중', p: false },
     happy: { e: '🎉', t: '기분 좋음', p: false }
   };
-  var chipsEl = document.getElementById('chips'), itemsEl = document.getElementById('items'), titleEl = document.getElementById('title'), monsEl = document.getElementById('mons');
+  var chipsEl = document.getElementById('chips'), itemsEl = document.getElementById('items'), monsEl = document.getElementById('mons');
   var MONS = { red: '#e5383b', orange: '#f4845f', yellow: '#f2c14e', green: '#52b788', blue: '#4a90d9', purple: '#9b72cf', pink: '#ee7fb0', white: '#e8e8e8' };
   var ITEMS = { cup: '☕', plant: '🪴', book: '📚', donut: '🍩', apple: '🍎', tea: '🍵', juice: '🥤', cactus: '🌵', lamp: '💡', phone: '📱', headset: '🎧', pen: '🖊️', clock: '⏰', cookie: '🍪', trophy: '🏆', flower: '🌷' };
   try { var sv = JSON.parse(localStorage.getItem('props') || '{}'); if (typeof sv.mon === 'string' && Object.prototype.hasOwnProperty.call(MONS, sv.mon)) mon = sv.mon; if (Array.isArray(sv.items)) items = sv.items.filter(function (k) { return Object.prototype.hasOwnProperty.call(ITEMS, k); }).slice(0, 4); } catch (e) {}
@@ -245,7 +254,7 @@
   try { var s = localStorage.getItem('checkin'); if (s) start = parseInt(s, 10); } catch (e) {}
   try { nick = localStorage.getItem('nick') || ''; title = localStorage.getItem('title') || ''; } catch (e) {}
   try { var savedStatus = localStorage.getItem('workStatus'); if (savedStatus && Object.prototype.hasOwnProperty.call(STAT, savedStatus)) status = savedStatus; stx = (localStorage.getItem('statusText') || '').slice(0, 8); } catch (e) {}
-  nickEl.value = nick; titleEl.value = title; document.getElementById('stext').value = stx;
+  nickEl.value = nick; document.getElementById('stext').value = stx;
 
   function pad(n) { return (n < 10 ? '0' : '') + n; }
   function drawTimer() {
@@ -258,9 +267,9 @@
     d.className = 'seat' + (cls ? ' ' + cls : '') + (known && STAT[st].p ? ' pause' : '');
     var tt = (typeof ttl === 'string') ? ttl.slice(0, 6) : '';
     var l = document.createElement('span'); l.className = 'lbl' + (tt ? ' two' : '');
-    if (tt) { var t1 = document.createElement('div'); t1.className = 'ttl'; t1.textContent = tt; l.appendChild(t1); }
-    var n1 = document.createElement('div'); n1.textContent = label; l.appendChild(n1); d.appendChild(l);
-    var m = document.createElement('div'); m.className = 'mon'; if (known && STAT[st].e) m.textContent = STAT[st].e;
+    if (tt) { var t1 = document.createElement('span'); t1.className = 'ttl'; t1.textContent = tt; l.appendChild(t1); }
+    var n1 = document.createElement('span'); n1.className='person-name'; n1.textContent = (cls ? ' · '+label : ''); l.appendChild(n1); d.appendChild(l);
+    var m = document.createElement('div'); m.className = 'mon';
     if (cls && !(known && STAT[st].p) && typeof mk === 'string' && Object.prototype.hasOwnProperty.call(MONS, mk)) { m.style.background = MONS[mk]; m.style.boxShadow = '0 0 12px ' + MONS[mk]; }
     d.appendChild(m);
     var list = Array.isArray(dl) ? dl : [];
@@ -360,24 +369,24 @@
         var select=function(){seatNo=i+1;localStorage.setItem('seatNo',String(seatNo));if(!start){start=Date.now();localStorage.setItem('checkin',String(start));}render();sync();};
         d.onclick=select;d.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();select();}};
       }else if(slot.kind==='me'){
-        node=seat(nick||'나','me',status,items,title,mon,stx);
+        node=seat(nick||'나','me',status,items,positionAt(i),mon,stx);
         decorateAvatar(node,motion==='work'?'🙂':MOTIONS[motion].emoji,motion,motion==='sleep'?'Zzz...':motion==='cheer'?'야호!':null);
-        node.querySelector('.cap2').textContent=positionAt(i);
+        node.querySelector('.cap2').textContent='';
       }else if(slot.kind==='real'){
         var pr=slot.pr,act=MOTIONS[pr.motion]?pr.motion:'work';
-        node=seat((pr.nick||'동료').slice(0,6),'on',pr.status,pr.items,pr.title,pr.mon,pr.stx);
+        node=seat((pr.nick||'동료').slice(0,6),'on',pr.status,pr.items,positionAt(i),pr.mon,pr.stx);
         decorateAvatar(node,act==='work'?'🙂':MOTIONS[act].emoji,act,act==='sleep'?'Zzz...':null);
-        node.querySelector('.cap2').textContent=positionAt(i);
+        node.querySelector('.cap2').textContent='';
       }else{
         var p=slot.pr;
-        node=seat(p.name,slot.kind==='boss'?'on npc boss':'on npc',p.status,p.items,p.title,p.mon,p.stx);
+        node=seat(p.name,slot.kind==='boss'?'on npc boss':'on npc',p.status,p.items,positionAt(i),p.mon,p.stx);
         var av=decorateAvatar(node,p.emoji,slot.kind==='boss'?'work':p.status==='sleepy'?'sleep':'work',slot.kind==='boss'?bossLine:null);
         if(slot.kind==='boss'){
           av.setAttribute('role','button');av.tabIndex=0;av.title='👑 사장님';
           var tap=function(){var now=Date.now();if(now-bossTapTime>2500)bossTaps=0;bossTapTime=now;bossTaps++;if(bossTaps>=5){bossTaps=0;document.getElementById('bossLine').value=bossLine;document.getElementById('bossModal').hidden=false;}};
           av.onclick=tap;av.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();tap();}};
         }
-        node.querySelector('.cap2').textContent=slot.kind==='boss'?'👑 NPC 고정석':positionAt(i);
+        node.querySelector('.cap2').textContent='';
       }
       seatsEl.appendChild(node);
     });
@@ -420,7 +429,7 @@
     }
     if (start) {
       Object.keys(STAT).forEach(function (k) {
-        chip((STAT[k].e ? STAT[k].e + ' ' : '') + STAT[k].t, status === k, function () { status = k; });
+        chip(STAT[k].t, status === k, function () { status = k; });
       });
     }
     monsEl.textContent = '';
@@ -460,11 +469,6 @@
   btn.addEventListener('click', function () {
     if (start) { start = null; try { localStorage.removeItem('checkin'); } catch (e) {} }
     else { start = Date.now(); try { localStorage.setItem('checkin', String(start)); } catch (e) {} }
-    render(); sync();
-  });
-  titleEl.addEventListener('change', function () {
-    title = titleEl.value.trim();
-    try { localStorage.setItem('title', title); } catch (e) {}
     render(); sync();
   });
   nickEl.addEventListener('change', function () {
