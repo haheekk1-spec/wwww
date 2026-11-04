@@ -133,6 +133,15 @@
   .seats { row-gap:33px; }
   #chips .chip { font-size:12px; padding:8px 12px; }
   .office-head { letter-spacing:0; }
+
+  /* v10: 책상 소품은 좌우 전용 공간에 배치하고 모니터 영역 침범 금지 */
+  .seat .prop-tray{position:absolute;bottom:17px;width:calc((100% - 51px)/2);height:46px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:1px;z-index:2;pointer-events:none;overflow:hidden}
+  .seat .prop-tray-left{left:2px}
+  .seat .prop-tray-right{right:2px}
+  .seat .desk-prop{display:block;font-size:clamp(10px,2.7vw,14px);line-height:18px;height:18px;max-width:100%;white-space:nowrap}
+  .seat .shelf{display:none}
+  .seat .mon{z-index:4}
+  .seat .stand{z-index:4}
 </style>
 </head>
 <body>
@@ -280,11 +289,14 @@
     if (cls && !(known && STAT[st].p) && typeof mk === 'string' && Object.prototype.hasOwnProperty.call(MONS, mk)) { m.style.background = MONS[mk]; m.style.boxShadow = '0 0 12px ' + MONS[mk]; }
     d.appendChild(m);
     var list = Array.isArray(dl) ? dl : [];
-    var sh = document.createElement('div'); sh.className = 'shelf';
-    list.slice(0, 4).forEach(function (k) {
-      if (typeof k === 'string' && Object.prototype.hasOwnProperty.call(ITEMS, k)) { var s1 = document.createElement('span'); s1.textContent = ITEMS[k]; sh.appendChild(s1); }
+    // 소품은 모니터 중앙을 비워 두고 양쪽 가장자리에만 배치한다.
+    var validProps = list.filter(function(k){return typeof k === 'string' && Object.prototype.hasOwnProperty.call(ITEMS,k);}).slice(0,4);
+    ['left','right'].forEach(function(side){
+      var tray = document.createElement('div'); tray.className = 'prop-tray prop-tray-' + side;
+      var group = side === 'left' ? validProps.slice(0,2) : validProps.slice(2,4);
+      group.forEach(function(k){ var prop=document.createElement('span'); prop.className='desk-prop'; prop.textContent=ITEMS[k]; tray.appendChild(prop); });
+      d.appendChild(tray);
     });
-    d.appendChild(sh);
     var sd = document.createElement('div'); sd.className = 'stand'; d.appendChild(sd);
     var w = document.createElement('div'); w.className = 'cell';
     w.appendChild(d);
