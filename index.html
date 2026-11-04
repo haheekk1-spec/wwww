@@ -20,8 +20,10 @@
   body > * { order: 5; }
   body > h1 { order: 0; }
   body > .top { order: 1; }
-  body > #rooms { order: 2; }
-  body > div:has(#seats) { order: 3; width: 100%; max-width: 720px; }
+  body > #decoBtn { order: 2; }
+  body > #deco { order: 3; }
+  body > #rooms { order: 4; }
+  body > div:has(#seats) { order: 5; width: 100%; max-width: 720px; }
   body > #note { order: 9; }
   button { font-size: 15px; padding: 12px 24px; border: 0; border-radius: 999px; background: #e5383b; color: #fff; font-weight: 600; cursor: pointer; }
   button.out { background: #3d2f2f; color: #eee; }
@@ -81,7 +83,18 @@
   .seat .avatar.panic{animation:panic .24s ease-in-out infinite}
   .seat .mon{z-index:4;bottom:28px;transform:scale(.78);transform-origin:bottom center}
   .seat .stand{z-index:4}
-  .seat .lbl{z-index:5}
+  .seat .lbl{z-index:5;top:auto;bottom:-24px;left:2px;right:2px;height:20px!important;line-height:17px!important;padding:0 2px!important;font-size:11px;overflow:hidden;background:#6b604a;box-shadow:0 1px 3px #0008}
+  .seat .lbl.two .ttl{display:none}
+  .seat .avatar{top:13px;font-size:33px}
+  .seat .speech{top:-24px}
+  .seats{row-gap:42px}
+  #deco{max-width:540px;margin:auto;box-sizing:border-box;padding:10px;border:1px solid #574343;border-radius:14px;background:#292122}
+  .deco-group{width:100%;box-sizing:border-box;border:1px solid #514040;border-radius:10px;padding:9px 12px;background:#352a2b}
+  .deco-group summary{cursor:pointer;font-size:14px;font-weight:600}
+  .deco-group .chips,.deco-group .row2{margin-top:10px}
+  .deco-group input{margin-top:10px}
+  .seat .cap{font-size:10px}
+  
   .seat .shelf{z-index:5}
   .seat::before{content:'';position:absolute;top:-7px;left:-4px;right:-4px;border-top:5px solid #9b8984}
   .seat .speech{position:absolute;z-index:8;left:50%;top:-33px;transform:translateX(-50%);background:#fff6de;color:#40302c;border-radius:11px;padding:4px 7px;white-space:nowrap;max-width:145px;overflow:hidden;text-overflow:ellipsis;font-size:10px;box-shadow:0 2px 6px #0007}
@@ -113,17 +126,17 @@
   <div class="chips" id="rooms"></div>
   <button class="chip" id="decoBtn">꾸미기 ▾</button>
   <div id="deco" hidden>
-  <div class="row2"><input id="nick" maxlength="6" placeholder="이름 (선택)">
+  <details class="deco-group"><summary>👤 이름 · 직함</summary><div class="row2"><input id="nick" maxlength="6" placeholder="이름 (선택)">
   <input id="title" maxlength="6" placeholder="직함 (선택)"></div>
-  <input id="stext" maxlength="8" placeholder="내 상태 직접 쓰기 (선택)" style="width:240px">
+  </details><details class="deco-group"><summary>💬 내 상태</summary><input id="stext" maxlength="8" placeholder="내 상태 직접 쓰기 (선택)" style="width:240px">
   <div class="chips" id="chips"></div>
-  <small>책상 위 소품 (최대 4개)</small>
+  </details><details class="deco-group"><summary>🪴 책상 소품 (최대 4개)</summary>
   <div class="chips" id="items"></div>
-  <small>모니터 색</small>
-  <div class="chips" id="mons"></div>
+  </details><details class="deco-group"><summary>🖥️ 모니터 색</summary>
+  <div class="chips" id="mons"></div></details>
   </div>
   <div>
-    <div class="office-head">🏢 회사 사무실 · 복도와 파티션 · 30석</div>
+    <div class="office-head">🏢 회사 사무실 · 복도와 파티션 · 12석</div>
     <div id="count" style="text-align:center;margin-bottom:14px;font-size:15px;"></div>
     <div class="seats cols3" id="seats"></div>
     <div id="actionMenu" class="action-menu" hidden></div>
@@ -136,7 +149,7 @@
   </section>
   <div id="bossModal" class="boss-modal" hidden><div class="boss-box"><h2>👑 사장님 비밀 멘트</h2><small>사장님을 다섯 번 터치해서 열었어!</small><input id="bossLine" maxlength="35" placeholder="사장님 한마디"><div><button id="bossSave">저장</button> <button class="out" id="bossClose">닫기</button></div><small id="bossHelp"></small></div></div>
   <small id="note">말없이 같이 일하는 공간이에요.</small>
-  <small style="font-size:10px;opacity:.55">출그닝 v8 · 캐릭터 동작 · 30석</small>
+  <small style="font-size:10px;opacity:.55">출그닝 v8 · 캐릭터 동작 · 12석</small>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
@@ -279,8 +292,16 @@
     {name:'선인장씨',title:'무언팀',status:'work',mon:'white',items:['cactus','plant','flower'],stx:'물 주세요',emoji:'🌵'}
   ];
   var seatNo = Number(localStorage.getItem('seatNo') || 4);
-  if (!Number.isInteger(seatNo) || seatNo<1 || seatNo>30) seatNo=2;
-  var POSITIONS = ['사장님 왼팔','👑 사장님','사장님 오른팔','기획팀장','기획팀','기획팀','개발팀장','개발팀','개발팀','디자인팀장','디자인팀','디자인팀','운영팀장','운영팀','운영팀','마케팅팀장','마케팅팀','마케팅팀','인사팀장','인사팀','인사팀','재무팀장','재무팀','재무팀','고객지원팀장','고객지원','고객지원','자유석','자유석','자유석'];
+  if (!Number.isInteger(seatNo) || seatNo<1 || seatNo>12) seatNo=4;
+  var ROOM_POSITIONS = [
+    ['사장님 오른팔','👑 사장님','사장님 왼팔','전략기획팀장','전략기획','전략기획','비서실','경영지원','경영지원','인사팀','재무팀','총무팀'],
+    ['개발팀장','프론트엔드','백엔드','앱개발','데이터팀','AI연구','QA담당','보안담당','서버운영','기술지원','신입개발','자유석'],
+    ['디자인팀장','UX기획','UI디자인','그래픽','브랜딩','영상편집','콘텐츠','일러스트','웹디자인','디자인인턴','촬영담당','자유석'],
+    ['영업팀장','국내영업','해외영업','마케팅','홍보','고객지원','제휴담당','상품기획','운영담당','CS담당','영업인턴','자유석'],
+    ['연구소장','신사업','R&D','품질관리','서비스기획','프로젝트PM','분석담당','테스트팀','기술기획','연구원','연구인턴','자유석']
+  ];
+  function positionAt(i){return ROOM_POSITIONS[((roomNo||1)-1)%ROOM_POSITIONS.length][i];}
+  function bossRoom(){return !roomNo||roomNo===1;}
   var BOSS = {name:'사장님',title:'대표이사',status:'work',mon:'yellow',items:['trophy','phone','clock','lamp'],stx:'',emoji:'😎'};
   var MOTIONS = {work:{name:'열일',emoji:'👩‍💻'},cheer:{name:'만세',emoji:'🙌'},sleep:{name:'졸기',emoji:'😴'},coffee:{name:'커피',emoji:'☕'},dance:{name:'춤추기',emoji:'🕺'},panic:{name:'멘붕',emoji:'😵'}};
   var motion=localStorage.getItem('myMotion')||'work';if(!MOTIONS[motion])motion='work';
@@ -310,30 +331,30 @@
   }
   function drawSeats() {
     seatsEl.textContent='';seatsEl.className='seats cols3';
-    var slots=Array(30).fill(null),occupied=0;
-    slots[1]={kind:'boss',pr:BOSS};
+    var slots=Array(12).fill(null),occupied=0;
+    if(bossRoom())slots[1]={kind:'boss',pr:BOSS};
     var active=peers.filter(function(p){return !p.isMe&&p.presence&&p.presence.state==='in';});
     active.sort(function(a,b){return String(a.peer).localeCompare(String(b.peer));});
     active.forEach(function(p){
       var pr=p.presence,desired=Number(pr.seatNo)-1;
-      if(!Number.isInteger(desired)||desired<0||desired>=30||desired===1)desired=3;
-      for(var j=0;j<29&&slots[desired];j++)desired=(desired+1)%30;
+      if(!Number.isInteger(desired)||desired<0||desired>=12||(bossRoom()&&desired===1))desired=3;
+      for(var j=0;j<12&&slots[desired];j++)desired=(desired+1)%12;
       if(!slots[desired]){slots[desired]={kind:'real',pr:pr};occupied++;}
     });
     if(start){
-      var mine=seatNo-1;if(mine<0||mine>=30||mine===1)mine=3;
-      for(var k=0;k<29&&slots[mine];k++)mine=(mine+1)%30;
+      var mine=seatNo-1;if(mine<0||mine>=12||(bossRoom()&&mine===1))mine=3;
+      for(var k=0;k<12&&slots[mine];k++)mine=(mine+1)%12;
       if(!slots[mine]){slots[mine]={kind:'me'};occupied++;}
     }
     getNpcs().forEach(function(p,i){
-      var pos=3+Math.floor(npcRand(i+30)*27);
-      for(var j=0;j<29&&slots[pos];j++)pos=(pos+1)%30;
+      var pos=3+Math.floor(npcRand(i+30)*9);
+      for(var j=0;j<12&&slots[pos];j++)pos=(pos+1)%12;
       if(!slots[pos])slots[pos]={kind:'npc',pr:p};
     });
     slots.forEach(function(slot,i){
       var node;
       if(!slot){
-        node=seat('빈자리','','',[],POSITIONS[i],null,'');
+        node=seat('빈자리','','',[],positionAt(i),null,'');
         var d=node.querySelector('.seat');d.classList.add('empty');d.setAttribute('role','button');d.tabIndex=0;
         node.querySelector('.cap').textContent='＋ 터치해서 착석';
         var select=function(){seatNo=i+1;localStorage.setItem('seatNo',String(seatNo));if(!start){start=Date.now();localStorage.setItem('checkin',String(start));}render();sync();};
@@ -341,12 +362,12 @@
       }else if(slot.kind==='me'){
         node=seat(nick||'나','me',status,items,title,mon,stx);
         decorateAvatar(node,motion==='work'?'🙂':MOTIONS[motion].emoji,motion,motion==='sleep'?'Zzz...':motion==='cheer'?'야호!':null);
-        node.querySelector('.cap2').textContent=POSITIONS[i];
+        node.querySelector('.cap2').textContent=positionAt(i);
       }else if(slot.kind==='real'){
         var pr=slot.pr,act=MOTIONS[pr.motion]?pr.motion:'work';
         node=seat((pr.nick||'동료').slice(0,6),'on',pr.status,pr.items,pr.title,pr.mon,pr.stx);
         decorateAvatar(node,act==='work'?'🙂':MOTIONS[act].emoji,act,act==='sleep'?'Zzz...':null);
-        node.querySelector('.cap2').textContent=POSITIONS[i];
+        node.querySelector('.cap2').textContent=positionAt(i);
       }else{
         var p=slot.pr;
         node=seat(p.name,slot.kind==='boss'?'on npc boss':'on npc',p.status,p.items,p.title,p.mon,p.stx);
@@ -356,7 +377,7 @@
           var tap=function(){var now=Date.now();if(now-bossTapTime>2500)bossTaps=0;bossTapTime=now;bossTaps++;if(bossTaps>=5){bossTaps=0;document.getElementById('bossLine').value=bossLine;document.getElementById('bossModal').hidden=false;}};
           av.onclick=tap;av.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();tap();}};
         }
-        node.querySelector('.cap2').textContent=slot.kind==='boss'?'👑 NPC 고정석':POSITIONS[i];
+        node.querySelector('.cap2').textContent=slot.kind==='boss'?'👑 NPC 고정석':positionAt(i);
       }
       seatsEl.appendChild(node);
     });
@@ -453,7 +474,7 @@
   });
   // 초기 화면은 모든 설정값을 읽은 뒤 렌더링한다.
 
-  var MAXROOM = 29, ROOMS = 5, MAXFLOOR = 20;
+  var MAXROOM = 12, ROOMS = 5, MAXFLOOR = 20;
   var floor = 0, roomNo = 0, lobbyRef = null, busy = false;
   var roomsEl = document.getElementById('rooms');
   var stxEl = document.getElementById('stext');
@@ -466,7 +487,7 @@
     decoBtn.textContent = wasHidden ? '꾸미기 ▴' : '꾸미기 ▾';
   });
   function roomName(f, r) { return 'f' + f + '-r' + r; }
-  function noteText() { return floor + '층 ' + roomNo + '호실 · 방당 최대 ' + MAXROOM + '명 (한 층 ' + (MAXROOM * ROOMS) + '명)'; }
+  function noteText() { return floor + '층 ' + roomNo + '호실 · 12석 · 호실마다 다른 포지션'; }
   function drawRooms() {
     roomsEl.textContent = '';
     if (!floor) return;
@@ -483,7 +504,7 @@
     lobby.join(roomName(f, r)).then(function (nr) {
       nr.presence({ state: 'out' });
       setTimeout(function () {
-        if (nr.peers().filter(function(p){return p.presence&&p.presence.state==='in';}).length > MAXROOM) {
+        if (nr.peers().filter(function(p){return p.presence&&p.presence.state==='in';}).length > (r===1?11:12)) {
           var done = function () { cb(null); };
           nr.leave().then(done, done);
         } else { cb(nr); }
